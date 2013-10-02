@@ -44,7 +44,7 @@ TARGET_SPECIFIC_HEADER_PATH := device/lge/p880/include
 
 BOARD_NO_ALLOW_DEQUEUE_CURRENT_BUFFER := true
 BOARD_USE_SKIA_LCDTEXT := true
-BOARD_EGL_CFG := device/lge/p880/egl.cfg
+BOARD_EGL_CFG := device/lge/p880/prebuilt/system/lib/egl/egl.cfg
 USE_OPENGL_RENDERER := true
 
 # Wifi related defines
@@ -74,8 +74,8 @@ BOARD_EGL_NEEDS_LEGACY_FB := true
 ## Radio fixes
 BOARD_RIL_CLASS := ../../../device/lge/p880/ril/
 
-BOARD_CUSTOM_GRAPHICS := ../../../device/lge/p880/recovery-gfx.c
-BOARD_CUSTOM_RECOVERY_KEYMAPPING := ../../device/lge/p880/recovery-keys.c
+BOARD_CUSTOM_GRAPHICS := ../../../device/lge/p880/recovery/recovery-gfx.c
+BOARD_CUSTOM_RECOVERY_KEYMAPPING := ../../device/lge/p880/recovery/recovery-keys.c
 BOARD_CHARGER_ENABLE_SUSPEND := true
 BOARD_BATTERY_DEVICE_NAME := battery
 

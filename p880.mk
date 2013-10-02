@@ -23,10 +23,10 @@ PRODUCT_COPY_FILES += \
 
 ## Boot image
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/init.x3.rc:root/init.x3.rc \
-    $(LOCAL_PATH)/init.x3.usb.rc:root/init.x3.usb.rc \
-    $(LOCAL_PATH)/ueventd.x3.rc:root/ueventd.x3.rc \
-    $(LOCAL_PATH)/fstab.x3:root/fstab.x3
+    $(LOCAL_PATH)/prebuilt/root/init.x3.rc:root/init.x3.rc \
+    $(LOCAL_PATH)/prebuilt/root/init.x3.usb.rc:root/init.x3.usb.rc \
+    $(LOCAL_PATH)/prebuilt/root/ueventd.x3.rc:root/ueventd.x3.rc \
+    $(LOCAL_PATH)/prebuilt/root/fstab.x3:root/fstab.x3
 
 ## Miscellaneous configs
 PRODUCT_COPY_FILES += \
