@@ -21,6 +21,6 @@
 # function: add_lunch_combo generic-eng
 
 
-add_lunch_combo full_p880-eng
-add_lunch_combo full_p880-userdebug
-add_lunch_combo full_p880-debug
+add_lunch_combo p880-eng
+add_lunch_combo p880-userdebug
+add_lunch_combo p880-debug

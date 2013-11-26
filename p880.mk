@@ -8,7 +8,7 @@ $(call inherit-product-if-exists, vendor/lge/p880/p880-vendor.mk)
 DEVICE_PACKAGE_OVERLAYS += device/lge/p880/overlay
 
 PRODUCT_TAGS += dalvik.gc.type-precise
-$(call inherit-product, frameworks/base/build/phone-xhdpi-1024-dalvik-heap.mk)
+$(call inherit-product, frameworks/native/build/phone-xhdpi-1024-dalvik-heap.mk)
 
 # This device is xhdpi
 PRODUCT_AAPT_CONFIG := normal hdpi xhdpi
@@ -23,16 +23,15 @@ PRODUCT_COPY_FILES += \
 
 ## Boot image
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/prebuilt/root/init.x3.rc:root/init.x3.rc \
-    $(LOCAL_PATH)/prebuilt/root/init.x3.usb.rc:root/init.x3.usb.rc \
-    $(LOCAL_PATH)/prebuilt/root/ueventd.x3.rc:root/ueventd.x3.rc \
-    $(LOCAL_PATH)/prebuilt/root/fstab.x3:root/fstab.x3
+    $(LOCAL_PATH)/init.x3.rc:root/init.x3.rc \
+    $(LOCAL_PATH)/init.x3.usb.rc:root/init.x3.usb.rc \
+    $(LOCAL_PATH)/ueventd.x3.rc:root/ueventd.x3.rc \
+    $(LOCAL_PATH)/fstab.x3:root/fstab.x3
 
 ## Miscellaneous configs
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/ipc_channels.config:system/etc/ipc_channels.config \
     $(LOCAL_PATH)/configs/nfcee_access.xml:system/etc/nfcee_access.xml \
-    $(LOCAL_PATH)/configs/vold.fstab:system/etc/vold.fstab \
     $(LOCAL_PATH)/configs/bcmdhd.cal:system/etc/wifi/bcmdhd.cal
 
 PRODUCT_COPY_FILES += \
@@ -80,20 +79,20 @@ $(call inherit-product, build/target/product/full.mk)
 # Permission files
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/nvcpud.xml::system/etc/permissions/nvcpud.xml \
-    frameworks/base/data/etc/handheld_core_hardware.xml:system/etc/permissions/handheld_core_hardware.xml \
-    frameworks/base/data/etc/android.hardware.camera.flash-autofocus.xml:system/etc/permissions/android.hardware.camera.flash-autofocus.xml \
-    frameworks/base/data/etc/android.hardware.camera.front.xml:system/etc/permissions/android.hardware.camera.front.xml \
-    frameworks/base/data/etc/android.hardware.telephony.gsm.xml:system/etc/permissions/android.hardware.telephony.gsm.xml \
-    frameworks/base/data/etc/android.hardware.location.gps.xml:system/etc/permissions/android.hardware.location.gps.xml \
-    frameworks/base/data/etc/android.hardware.wifi.xml:system/etc/permissions/android.hardware.wifi.xml \
-    frameworks/base/data/etc/android.hardware.sensor.proximity.xml:system/etc/permissions/android.hardware.sensor.proximity.xml \
-    frameworks/base/data/etc/android.hardware.sensor.light.xml:system/etc/permissions/android.hardware.sensor.light.xml \
-    frameworks/base/data/etc/android.hardware.sensor.gyroscope.xml:system/etc/permissions/android.hardware.sensor.gyroscope.xml \
-    frameworks/base/data/etc/android.hardware.nfc.xml:system/etc/permissions/android.hardware.nfc.xml \
-    frameworks/base/data/etc/android.software.sip.voip.xml:system/etc/permissions/android.software.sip.voip.xml \
-    frameworks/base/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
-    frameworks/base/data/etc/android.hardware.usb.accessory.xml:system/etc/permissions/android.hardware.usb.accessory.xml \
-    frameworks/base/data/etc/android.hardware.wifi.direct.xml:system/etc/permissions/android.hardware.wifi.direct.xml
+    frameworks/native/data/etc/handheld_core_hardware.xml:system/etc/permissions/handheld_core_hardware.xml \
+    frameworks/native/data/etc/android.hardware.camera.flash-autofocus.xml:system/etc/permissions/android.hardware.camera.flash-autofocus.xml \
+    frameworks/native/data/etc/android.hardware.camera.front.xml:system/etc/permissions/android.hardware.camera.front.xml \
+    frameworks/native/data/etc/android.hardware.telephony.gsm.xml:system/etc/permissions/android.hardware.telephony.gsm.xml \
+    frameworks/native/data/etc/android.hardware.location.gps.xml:system/etc/permissions/android.hardware.location.gps.xml \
+    frameworks/native/data/etc/android.hardware.wifi.xml:system/etc/permissions/android.hardware.wifi.xml \
+    frameworks/native/data/etc/android.hardware.sensor.proximity.xml:system/etc/permissions/android.hardware.sensor.proximity.xml \
+    frameworks/native/data/etc/android.hardware.sensor.light.xml:system/etc/permissions/android.hardware.sensor.light.xml \
+    frameworks/native/data/etc/android.hardware.sensor.gyroscope.xml:system/etc/permissions/android.hardware.sensor.gyroscope.xml \
+    frameworks/native/data/etc/android.hardware.nfc.xml:system/etc/permissions/android.hardware.nfc.xml \
+    frameworks/native/data/etc/android.software.sip.voip.xml:system/etc/permissions/android.software.sip.voip.xml \
+    frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
+    frameworks/native/data/etc/android.hardware.usb.accessory.xml:system/etc/permissions/android.hardware.usb.accessory.xml \
+    frameworks/native/data/etc/android.hardware.wifi.direct.xml:system/etc/permissions/android.hardware.wifi.direct.xml
 
 # Charger mode
 PRODUCT_PACKAGES += \
@@ -111,17 +110,26 @@ PRODUCT_PACKAGES += \
     Nfc \
     Tag
 
+# Common packages
+PRODUCT_PACKAGES += \
+    libdashplayer \
+    libnetcmdiface
+
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/prebuilt/init.rmnet:system/bin/init.rmnet \
     $(LOCAL_PATH)/prebuilt/init.rmnet-down:system/bin/init.rmnet-down \
     $(LOCAL_PATH)/prebuilt/init.rawip:system/bin/init.rawip
 
-# For SELinux
+# SELinux
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/prebuilt/51selinux:system/etc/init.d/51selinux
 
+# TWRP
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/prebuilt/etc/twrp.fstab:recovery/root/etc/twrp.fstab
+
 PRODUCT_BUILD_PROP_OVERRIDES += BUILD_UTC_DATE=0
-PRODUCT_NAME := full_p880
+PRODUCT_NAME := p880
 PRODUCT_DEVICE := p880
 PRODUCT_MODEL := LG-P880
 PRODUCT_MANUFACTURER := LGE

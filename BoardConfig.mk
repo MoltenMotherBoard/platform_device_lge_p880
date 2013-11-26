@@ -10,8 +10,9 @@ TARGET_BOOTLOADER_BOARD_NAME := p880
 TARGET_NO_BOOTLOADER := true
 TARGET_CPU_ABI := armeabi-v7a
 TARGET_CPU_ABI2 := armeabi
+TARGET_CPU_VARIANT := cortex-a9
 TARGET_ARCH_VARIANT := armv7-a-neon
-TARGET_ARCH_VARIANT_CPU := cortex-a9
+TARGET_ARCH_VARIANT_CPU := $(TARGET_CPU_VARIANT)
 TARGET_CPU_SMP := true
 ARCH_ARM_HAVE_TLS_REGISTER := true
 ARCH_ARM_USE_NON_NEON_MEMCPY := true
@@ -33,19 +34,22 @@ TARGET_RECOVERY_PRE_COMMAND := "/system/bin/setup-recovery"
 
 # Try to build the kernel
 TARGET_KERNEL_CONFIG := cyanogenmod_x3_defconfig
+TARGET_KERNEL_SOURCE := kernel/lge/p880
 # Keep this as a fallback
 TARGET_PREBUILT_KERNEL := device/lge/p880/kernel
 
 BOARD_HAS_NO_SELECT_BUTTON := true
-#BOARD_TOUCH_RECOVERY := true
+TARGET_RECOVERY_FSTAB = device/lge/p880/fstab.x3
+RECOVERY_FSTAB_VERSION = 2
 TARGET_USERIMAGES_USE_EXT4 := true
 
 TARGET_SPECIFIC_HEADER_PATH := device/lge/p880/include
 
 BOARD_NO_ALLOW_DEQUEUE_CURRENT_BUFFER := true
 BOARD_USE_SKIA_LCDTEXT := true
-BOARD_EGL_CFG := device/lge/p880/prebuilt/system/lib/egl/egl.cfg
+BOARD_EGL_CFG := device/lge/p880/egl.cfg
 USE_OPENGL_RENDERER := true
+BOARD_EGL_NEEDS_LEGACY_FB := true
 
 # Wifi related defines
 BOARD_WPA_SUPPLICANT_DRIVER := NL80211
@@ -69,13 +73,12 @@ BOARD_BLUEDROID_VENDOR_CONF := device/lge/p880/bluetooth/vnd_bt.txt
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := device/lge/p880/bluetooth
 
 COMMON_GLOBAL_CFLAGS += -DMR0_AUDIO_BLOB -DMR0_CAMERA_BLOB
-BOARD_EGL_NEEDS_LEGACY_FB := true
 
 ## Radio fixes
-BOARD_RIL_CLASS := ../../../device/lge/p880/ril/
+#BOARD_RIL_CLASS := ../../../device/lge/p880/ril/
 
-BOARD_CUSTOM_GRAPHICS := ../../../device/lge/p880/recovery/recovery-gfx.c
-BOARD_CUSTOM_RECOVERY_KEYMAPPING := ../../device/lge/p880/recovery/recovery-keys.c
+BOARD_CUSTOM_GRAPHICS := ../../../device/lge/p880/recovery-gfx.c
+BOARD_CUSTOM_RECOVERY_KEYMAPPING := ../../device/lge/p880/recovery-keys.c
 BOARD_CHARGER_ENABLE_SUSPEND := true
 BOARD_BATTERY_DEVICE_NAME := battery
 
@@ -92,3 +95,9 @@ BOARD_SEPOLICY_UNION := \
 
 endif
 
+BOARD_HARDWARE_CLASS := device/lge/p880/cmhw/
+
+## TWRP
+DEVICE_RESOLUTION := 720x1280
+RECOVERY_GRAPHICS_USE_LINELENGTH := true
+HAVE_SELINUX := true

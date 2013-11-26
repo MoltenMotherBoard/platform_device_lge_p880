@@ -17,7 +17,7 @@
 #ifndef ANDROID_INCLUDE_CAMERA_H
 #define ANDROID_INCLUDE_CAMERA_H
 
-#include "camera_common.h"
+#include <hardware/camera_common.h>
 
 /**
  * Camera device HAL, initial version [ CAMERA_DEVICE_API_VERSION_1_0 ]

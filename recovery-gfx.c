@@ -65,6 +65,7 @@ static GGLSurface gr_framebuffer[NUM_BUFFERS];
 static GGLSurface gr_mem_surface;
 static unsigned gr_active_fb = 0;
 static unsigned double_buffering = 0;
+static int overscan_percent = OVERSCAN_PERCENT;
 static int overscan_offset_x = 0;
 static int overscan_offset_y = 0;
 
@@ -138,6 +139,9 @@ static int get_framebuffer(GGLSurface *fb)
         close(fd);
         return -1;
     }
+
+    overscan_offset_x = vi.xres * overscan_percent / 100;
+    overscan_offset_y = vi.yres * overscan_percent / 100;
 
     fb->version = sizeof(*fb);
     fb->width = vi.xres;
