@@ -170,11 +170,11 @@
 
     <integer name="config_deviceHardwareKeys">7</integer>
 
-	<!-- Enable lockscreen translucent decor by default -->
+    <!-- Enable lockscreen translucent decor by default -->
     <bool name="config_enableLockScreenTranslucentDecor">true</bool>
 
-	<!-- If this is true, the screen will fade off. -->
-	<bool name="config_animateScreenLights">false</bool>
+    <!-- If this is true, the screen will fade off. -->
+    <bool name="config_animateScreenLights">false</bool>
 
     <!-- Device supports LED flashlight -->
     <bool name="config_enableTorch">true</bool>
