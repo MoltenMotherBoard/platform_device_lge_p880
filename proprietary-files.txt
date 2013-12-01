@@ -6,7 +6,7 @@ bin/rild
 bin/tf_daemon
 lib/hw/camera.tegra.so
 lib/hw/gps.tegra.so
-lib/hw/lights.x3.so
+lib/hw/lights.tegra.so
 lib/hw/sensors.tegra.so
 lib/hw/audio_policy.tegra.so
 lib/hw/audio.primary.tegra.so
@@ -84,6 +84,3 @@ lib/libmorpho_noise_reduction.so
 lib/libnvaudioservice.so
 lib/libtinyalsa.so
 lib/libaudioavp.so
-# Camera is built against a modified libjpeg, and requires that one to
-# encode images
-lib/lgejpeg.so
