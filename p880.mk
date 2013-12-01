@@ -103,6 +103,7 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     audio.a2dp.default \
     com.android.future.usb.accessory \
+	audio.r_submix.default \
     libnetcmdiface
 
 # NFC packages
