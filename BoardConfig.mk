@@ -121,3 +121,5 @@ TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
 
 TARGET_USE_CUSTOM_LUN_FILE_PATH := "/sys/devices/platform/tegra-udc.0/gadget/lun0/file"
 TW_INCLUDE_FB2PNG := true
+
+TARGET_KERNEL_SELINUX_CONFIG := x3_selinux_defconfig
