@@ -10,6 +10,8 @@ DEVICE_PACKAGE_OVERLAYS += device/lge/p880/overlay
 PRODUCT_TAGS += dalvik.gc.type-precise
 $(call inherit-product, frameworks/native/build/phone-xhdpi-1024-dalvik-heap.mk)
 
+$(call inherit-product-if-exists, hardware/qcom/media-caf/dashplayer/Android.mk)
+
 # This device is xhdpi
 PRODUCT_AAPT_CONFIG := normal hdpi xhdpi
 PRODUCT_AAPT_PREF_CONFIG := xhdpi
