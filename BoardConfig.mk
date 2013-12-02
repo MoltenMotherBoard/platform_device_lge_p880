@@ -34,7 +34,7 @@ TARGET_RECOVERY_PRE_COMMAND := "/system/bin/setup-recovery"
 
 # Try to build the kernel
 TARGET_KERNEL_SOURCE := kernel/lge/x3
-TARGET_KERNEL_CONFIG := cyanogenmod_x3_defconfig
+TARGET_KERNEL_CONFIG := omni_x3_defconfig
 
 BOARD_HAS_NO_SELECT_BUTTON := true
 BOARD_RECOVERY_SWIPE := true
@@ -73,6 +73,8 @@ BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := device/lge/p880/bluetooth
 BOARD_HAVE_PRE_KITKAT_AUDIO_BLOB := true
 
 COMMON_GLOBAL_CFLAGS += -DMR0_AUDIO_BLOB -DMR0_CAMERA_BLOB -DNEEDS_VECTORIMPL_SYMBOLS
+
+USE_DEVICE_SPECIFIC_CAMERA := true
 
 # Radio fixes
 BOARD_RIL_CLASS := ../../../device/lge/p880/ril/
