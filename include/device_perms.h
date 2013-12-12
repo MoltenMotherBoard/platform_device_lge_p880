@@ -57,6 +57,7 @@ struct {
     { "net.pdp2",         AID_RADIO,    AID_RADIO },
     { "net.rmmod.svc_done",    AID_RADIO,    AID_RADIO },
     { "media.tegra",      AID_MEDIA,    0 },
+	{ "camera.",		  AID_SYSTEM,	0 },
     { NULL, 0, 0 }
 };
 
