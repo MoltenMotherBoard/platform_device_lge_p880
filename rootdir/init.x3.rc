@@ -317,17 +317,9 @@ on boot
 
     chown root radio /sys/devices/platform/baseband_xmm_power/xmm_onoff
 
-    setprop nvcpud.enabled true
-    setprop nvcpud.config_refresh_ms -1
-
     # Torch perms
     chown system camera /sys/devices/platform/tegra-i2c.2/i2c-2/2-0053/torch
     chmod 0660 /sys/devices/platform/tegra-i2c.2/i2c-2/2-0053/torch
-
-service nvcpud /system/bin/nvcpud
-    class main
-    user root
-    group root
 
 service charger /charger
     class charger
