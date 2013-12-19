@@ -88,7 +88,7 @@ BOARD_BATTERY_DEVICE_NAME := battery
 ifeq ($(HAVE_SELINUX),true)
 
 BOARD_SEPOLICY_DIRS += \
-    device/lge/p880/selinux
+    device/lge/p880/sepolicy
 
 BOARD_SEPOLICY_UNION += \
     file_contexts \
