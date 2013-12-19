@@ -77,11 +77,16 @@ on boot
     chmod 0660 /sys/class/rfkill/rfkill0/type
     chmod 0660 /sys/class/rfkill/rfkill1/state
     chmod 0660 /sys/class/rfkill/rfkill1/type
+    chmod 0660 /sys/class/rfkill/rfkill2/state
+    chmod 0660 /sys/class/rfkill/rfkill2/type
     chown bluetooth bluetooth /sys/class/rfkill/rfkill0/state
     chown bluetooth bluetooth /sys/class/rfkill/rfkill0/type
     chown bluetooth bluetooth /sys/class/rfkill/rfkill1/state
     chown bluetooth bluetooth /sys/class/rfkill/rfkill1/type
-    write /sys/class/rfkill/rfkill0/state 0
+    chown bluetooth bluetooth /sys/class/rfkill/rfkill2/state
+    chown bluetooth bluetooth /sys/class/rfkill/rfkill2/type
+    restorecon /sys/class/rfkill/rfkill0/state
+    restorecon /sys/class/rfkill/rfkill0/type
 
 # FactoryTest AT command
     chmod 0664 /sys/devices/platform/bd_address/bdaddr_if
@@ -167,34 +172,49 @@ on boot
     chmod 0660 /sys/bus/i2c/drivers/apds990x/0-0039/ps_cal_result
 
 # Power management settings
+     chown system system /sys/module/cpu_tegra3/parameters/no_lp
     write /sys/module/cpu_tegra3/parameters/no_lp 0
     #write /sys/module/tegra3_emc/parameters/emc_enable 0
     #write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 1000000
-    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor interactive
-    write /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor interactive
-    write /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor interactive
-    write /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor interactive
-    chown system system /sys/devices/system/cpu/cpufreq/interactive/cores_states
-    chmod 0644 /sys/devices/system/cpu/cpufreq/interactive/cores_states
-    chown system system /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
-    chmod 0644 /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
-    write /sys/module/cpu_tegra/parameters/force_policy_max Y
     write /sys/devices/system/cpu/cpufreq/interactive/boost_factor 2
+    write /sys/devices/system/cpu/cpufreq/interactive/input_boost 1
     write /sys/devices/system/cpu/cpufreq/interactive/sustain_load 80
     write /sys/module/cpu_tegra3/parameters/auto_hotplug 1
-    write /sys/module/cpuidle/parameters/lp2_in_idle 1
+    #write /sys/module/cpuidle_t3/parameters/lp2_0_in_idle 0
+    write /sys/module/cpuidle/parameters/lp2_in_idle 0
 
 # Interactive dynamic frequecy mode settings
-    write /sys/devices/system/cpu/cpufreq/interactive/go_maxspeed_load 95
-    write /sys/devices/system/cpu/cpufreq/interactive/dynamic_freq_mode 1
-    write /sys/devices/system/cpu/cpufreq/interactive/min_sample_time 20000
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/boost_factor
+    chmod 0660 /sys/devices/system/cpu/cpufreq/interactive/boost_factor
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/go_maxspeed_load
+    chmod 0660 /sys/devices/system/cpu/cpufreq/interactive/go_maxspeed_load
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/io_is_busy
+    chmod 0660 /sys/devices/system/cpu/cpufreq/interactive/io_is_busy
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/max_boost
+    chmod 0660 /sys/devices/system/cpu/cpufreq/interactive/max_boost
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/sustain_load
+    chmod 0660 /sys/devices/system/cpu/cpufreq/interactive/sustain_load
+
+    restorecon /sys/devices/system/cpu
+    restorecon /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/above_hispeed_delay
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/boost
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/boost_factor
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/go_hispeed_load
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/go_maxspeed_load
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/hispeed_freq
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/input_boost
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/io_is_busy
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/max_boost
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/min_sample_time
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/sustain_load
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/timer_rate
+    restorecon /sys/devices/tegradc.0/smartdimmer/aggressiveness
+    restorecon /sys/devices/tegradc.0/smartdimmer/enable
 
 # Power Save for camera preview and recording
     chown media camera /sys/devices/platform/tegra_camera/power_save_preview
     chown media camera /sys/devices/platform/tegra_camera/power_save_rec
-
-# Power management for jpeg decode
-    chown media sdcard_rw /sys/devices/nvavp/jpeg_decode
 
     chown system radio /sys/devices/platform/tegra-i2c.4/i2c-4/4-001c/max77663-rtc.0/enablesmpl
     chown system radio /sys/devices/platform/tegra-i2c.4/i2c-4/4-001c/max77663-rtc.0/smplcount
