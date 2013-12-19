@@ -124,9 +124,9 @@ on boot
     chown system radio /sys/class/power_supply/charger/device/chgcc_ta
 
 # didim
-    chown system system /sys/devices/nvhost/tegradc.0/smartdimmer/enable
-    chown system system /sys/devices/nvhost/tegradc.0/smartdimmer/aggressiveness
-    chown system system /sys/devices/nvhost/tegradc.0/smartdimmer/phase_in_video
+    chown root system /sys/class/graphics/fb0/device/smartdimmer/enable
+    chmod 0664 /sys/class/graphics/fb0/device/smartdimmer/enable
+    restorecon /sys/class/graphics/fb0/device/smartdimmer/enable
 
 # power
     chown system system /sys/kernel/tegra_cap/core_cap_level
