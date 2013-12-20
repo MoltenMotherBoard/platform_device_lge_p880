@@ -187,4 +187,8 @@
     <!-- Enable lockscreen translucent decor by default -->
     <bool name="config_enableLockScreenTranslucentDecor">true</bool>
 
+    <bool name="config_intrusiveNotificationLed">true</bool>
+
+    <bool name="config_intrusiveBatteryLed">true</bool>
+
 </resources>

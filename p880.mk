@@ -113,18 +113,23 @@ PRODUCT_PACKAGES += \
     charger \
     charger_res_images
 
-PRODUCT_PACKAGES += \
-    audio.a2dp.default \
-    audio.r_submix.default \
-    com.android.future.usb.accessory \
-    libnetcmdiface
-
 # NFC packages
 PRODUCT_PACKAGES += \
     libnfc \
     libnfc_jni \
     Nfc \
     Tag
+
+# Misc
+PRODUCT_PACKAGES += \
+    audio.a2dp.default \
+    audio.r_submix.default \
+    com.android.future.usb.accessory \
+    libnetcmdiface
+
+# Source-built
+PRODUCT_PACKAGES += \
+    lights.x3
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/prebuilt/init.rmnet:system/bin/init.rmnet \
