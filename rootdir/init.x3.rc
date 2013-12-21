@@ -10,26 +10,22 @@ on early-init
 
 on init
     # See storage config details at http://source.android.com/tech/storage/
-    chmod 0701 /mnt/media_rw
     mkdir /mnt/shell/emulated 0700 shell shell
-    mkdir /storage 0550 system sdcard_r
     mkdir /storage/emulated 0555 root root
 
-    mkdir /mnt/media_rw/sdcard1 0775 system system
-    mkdir /storage/sdcard1 0775 system system
+    mkdir /mnt/media_rw/sdcard1 0700 media_rw media_rw
+    mkdir /storage/sdcard1 0700 root root
 
     export EXTERNAL_STORAGE /storage/emulated/legacy
-    export SECONDARY_STORAGE /storage/sdcard1
     export EMULATED_STORAGE_SOURCE /mnt/shell/emulated
     export EMULATED_STORAGE_TARGET /storage/emulated
+    export SECONDARY_STORAGE /storage/sdcard1
 
     # Support legacy paths
     symlink /storage/emulated/legacy /sdcard
     symlink /storage/emulated/legacy /mnt/sdcard
     symlink /storage/emulated/legacy /storage/sdcard0
     symlink /mnt/shell/emulated/0 /storage/emulated/legacy
-    symlink /storage/sdcard1 /extSdCard
-    symlink /storage/sdcard1 /mnt/extSdCard
 
 on fs
     mount_all ./fstab.x3
@@ -51,19 +47,38 @@ on fs
 
     setprop ro.crypto.fuse_sdcard true
 
-on boot
-    insmod /system/lib/modules/bthid.ko
-    mkdir /data/misc/bluetooth 0770 bluetooth bluetooth
-# --- BRCM
-    mkdir /data/misc/wifi 0775 wifi radio
+on post-fs-data
+    mkdir /data/misc/wifi 0770 wifi wifi
     mkdir /data/misc/wifi/sockets 0770 wifi wifi
     mkdir /data/misc/dhcp 0770 dhcp dhcp
     chown dhcp dhcp /data/misc/dhcp
-    mkdir /data/nvcam 0700 media camera
-    # we will remap this as /mnt/sdcard with the sdcard fuse tool
-    mkdir /data/media 0775 media_rw media_rw
-    chown media_rw media_rw /data/media
 
+    mkdir /data/nvcam 0700 media camera
+
+    # we will remap this as /mnt/sdcard with the sdcard fuse tool
+    mkdir /data/media 0770 media_rw media_rw
+
+    # change back to bluetooth from system
+    chown bluetooth net_bt_stack /data/misc/bluetooth
+
+    # create directory for lgdrm
+    mkdir /data/lgdrm 0770 system media
+
+    # Set buffer sizes from stock (lower readmax)
+    setprop net.tcp.buffersize.default 4096,87380,393216,4096,16384,110208
+    setprop net.tcp.buffersize.wifi    524288,1048576,2097152,262144,524288,1048576
+    setprop net.tcp.buffersize.lte     524288,1048576,2097152,262144,524288,1048576
+    setprop net.tcp.buffersize.umts    4094,87380,393216,4096,16384,110208
+    setprop net.tcp.buffersize.hspa    4094,87380,393216,4096,16384,110208
+    setprop net.tcp.buffersize.hsupa   4094,87380,393216,4096,16384,110208
+    setprop net.tcp.buffersize.hsdpa   4094,87380,393216,4096,16384,110208
+    setprop net.tcp.buffersize.edge    4093,26280,35040,4096,16384,35040
+    setprop net.tcp.buffersize.gprs    4092,8760,11680,4096,8760,11680
+
+    # Set indication (checked by vold) that we have finished this action
+    setprop vold.post_fs_data_done 1
+
+on boot
     chmod 0777 /dev/block/platform/sdhci-tegra.3/by-name/NVA
     chown system sdcard_rw /dev/block/platform/sdhci-tegra.3/by-name/NVA
     chmod 0660 /dev/block/platform/sdhci-tegra.3/by-name/NVA ## NV partition
@@ -77,18 +92,16 @@ on boot
     chmod 0660 /sys/class/rfkill/rfkill1/type
     chmod 0660 /sys/class/rfkill/rfkill2/state
     chmod 0660 /sys/class/rfkill/rfkill2/type
-    chown bluetooth bluetooth /sys/class/rfkill/rfkill0/state
-    chown bluetooth bluetooth /sys/class/rfkill/rfkill0/type
-    chown bluetooth bluetooth /sys/class/rfkill/rfkill1/state
-    chown bluetooth bluetooth /sys/class/rfkill/rfkill1/type
-    chown bluetooth bluetooth /sys/class/rfkill/rfkill2/state
-    chown bluetooth bluetooth /sys/class/rfkill/rfkill2/type
-    restorecon /sys/class/rfkill/rfkill0/state
-    restorecon /sys/class/rfkill/rfkill0/type
+    chown bluetooth net_bt_stack /sys/class/rfkill/rfkill0/state
+    chown bluetooth net_bt_stack /sys/class/rfkill/rfkill0/type
+    chown bluetooth net_bt_stack /sys/class/rfkill/rfkill1/state
+    chown bluetooth net_bt_stack /sys/class/rfkill/rfkill1/type
+    chown bluetooth net_bt_stack /sys/class/rfkill/rfkill2/state
+    chown bluetooth net_bt_stack /sys/class/rfkill/rfkill2/type
 
 # FactoryTest AT command
     chmod 0664 /sys/devices/platform/bd_address/bdaddr_if
-    chown radio bluetooth /sys/devices/platform/bd_address/bdaddr_if
+    chown radio net_bt_stack /sys/devices/platform/bd_address/bdaddr_if
 
 # bluetooth LPM
     chmod 0220 /proc/bluetooth/sleep/lpm
@@ -97,14 +110,14 @@ on boot
     chown bluetooth net_bt_stack /proc/bluetooth/sleep/btwrite
 
 # backlight
-    chown system radio /sys/devices/platform/tegra-i2c.1/i2c-1/1-0036/leds/lcd-backlight/brightness
-    chmod 0664 /sys/devices/platform/tegra-i2c.1/i2c-1/1-0036/leds/lcd-backlight/brightness
+    chown system radio /sys/class/leds/lcd-backlight/brightness
+    chmod 0664 /sys/class/leds/lcd-backlight/brightness
 
 # key led
-    chown system radio /sys/devices/platform/button-backlight/leds/button-backlight/brightness
-    chmod 0664 /sys/devices/platform/button-backlight/leds/button-backlight/brightness
-    chown system radio /sys/devices/platform/button-backlight/leds/button-backlight/br_maintain_on
-    chmod 0664 /sys/devices/platform/button-backlight/leds/button-backlight/br_maintain_on
+    chown system radio /sys/class/leds/button-backlight/brightness
+    chmod 0664 /sys/class/leds/button-backlight/brightness
+    chown system radio /sys/class/leds/button-backlight/br_maintain_on
+    chmod 0664 /sys/class/leds/button-backlight/br_maintain_on
     chown system radio /sys/devices/platform/gpio-keys.0/key_test_mode
 
 # RGB bridge IC(SSD2825)
@@ -122,13 +135,13 @@ on boot
     chmod 0660 /sys/devices/platform/spi_tegra.4/spi4.2/reg_dump
 
 # fuelgauge
-    chown system radio /sys/devices/platform/tegra-i2c.4/i2c-4/4-0036/power_supply/state
-    chown system radio sys/devices/platform/tegra-i2c.4/i2c-4/4-0035/chgcc_ta
+    #chown system radio /sys/devices/platform/tegra-i2c.4/i2c-4/4-0036/state
+    chown system radio /sys/class/power_supply/fuelgauge/device/state
+    chown system radio /sys/class/power_supply/charger/device/chgcc_ta
 
 # didim
-    chown root system /sys/class/graphics/fb0/device/smartdimmer/enable
-    chmod 0664 /sys/class/graphics/fb0/device/smartdimmer/enable
-    restorecon /sys/class/graphics/fb0/device/smartdimmer/enable
+    chown system system /sys/class/graphics/fb0/device/smartdimmer/enable
+    chown system system /sys/class/graphics/fb0/device/smartdimmer/agressiveness
 
 # power
     chown system system /sys/kernel/tegra_cap/core_cap_level
@@ -171,7 +184,6 @@ on boot
     chmod 0660 /sys/bus/i2c/drivers/apds990x/0-0039/ps_cal_result
 
 # Power management settings
-    chown system system /sys/module/cpu_tegra3/parameters/no_lp
     write /sys/module/cpu_tegra3/parameters/no_lp 0
     #write /sys/module/tegra3_emc/parameters/emc_enable 0
     #write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 1000000
@@ -230,6 +242,45 @@ on boot
     write /proc/sys/net/ipv6/conf/rmnet2/disable_ipv6 1
 #LGE_CHANGE_E 20120720, hwansuk.kang@lge.com [data] Disable IPv6 for mobile network
 
+    write /sys/class/gpio/export 61
+
+    chown system system /sys/devices/platform/gps_gpio/poweron
+    chown system system /sys/devices/platform/gps_gpio/reset
+    chown system system /sys/devices/platform/gps_gpio/eclk
+    chown system system /dev/pts17
+    mkdir /data/gps
+    chmod 770 /data/gps
+    chown system system /data/gps
+    chmod 770 /system/etc/cert/lge.cer
+    chown system system /system/etc/cert/lge.cer
+    chmod 770 /system/etc/hmconfig.txt
+    chown system system /system/etc/hmconfig.txt
+    chown audio audio /dev/pts29
+
+    mkdir /cal/secclk 0770 system system
+    chmod 0770 /cal/secclk
+    chown system system /cal/secclk
+
+    chown root radio /sys/devices/platform/baseband_xmm_power/xmm_onoff
+
+    chown system system /sys/power/lge_logstart
+    chmod 0660 /sys/power/lge_logstart
+
+    setprop nvcpud.enabled true
+    setprop nvcpud.config_refresh_ms -1
+
+    # Torch perms
+    chown system camera /sys/devices/platform/tegra-i2c.2/i2c-2/2-0053/torch
+    chmod 0666 /sys/devices/platform/tegra-i2c.2/i2c-2/2-0053/torch
+
+    # Hardware tunable perms
+    chown root system /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning
+    chown root system /sys/devices/platform/tspdrv/nforce_timed
+    chmod 0664 /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning
+    chmod 0664 /sys/devices/platform/tspdrv/nforce_timed
+    restorecon /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning
+    restorecon /sys/devices/platform/tspdrv/nforce_timed
+
 #LGE_RIL_START sabina.park@lge.com
 service rawip_rmnet1 /system/bin/init.rmnet 1
     user root
@@ -278,7 +329,7 @@ service iprenew_p2p /system/bin/dhcpcd -n
 
 # wifi services
 service p2p_supplicant /system/bin/wpa_supplicant \
-    -iwlan0 -Dnl80211 -iwlan0 -c/data/misc/wifi/wpa_supplicant.conf \
+    -iwlan0 -Dnl80211 -iwlan0 -c/+data/misc/wifi/wpa_supplicant.conf \
     -I/system/etc/wifi/wpa_supplicant_overlay.conf -N \
     -ip2p0 -Dnl80211 -c /data/misc/wifi/p2p_supplicant.conf \
     -I/system/etc/wifi/p2p_supplicant_overlay.conf \
@@ -310,35 +361,14 @@ service wpa_supplicant /system/bin/wpa_supplicant \
 service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated
     class late_start
 
-service fuse_sdcard1 /system/bin/sdcard -u 1023 -g 1023 /mnt/media_rw/sdcard1 /storage/sdcard1
+service fuse_sdcard1 /system/bin/sdcard -u 1023 -g 1023 -w 1023 -d /mnt/media_rw/sdcard1 /storage/sdcard1
     class late_start
     disabled
 
-on boot
-    write /sys/class/gpio/export 61
-
-    chown system system /sys/devices/platform/gps_gpio/poweron
-    chown system system /sys/devices/platform/gps_gpio/reset
-    chown system system /sys/devices/platform/gps_gpio/eclk
-    chown system system /dev/pts17
-    mkdir /data/gps
-    chmod 770 /data/gps
-    chown system system /data/gps
-    chmod 770 /system/etc/cert/lge.cer
-    chown system system /system/etc/cert/lge.cer
-    chmod 770 /system/etc/hmconfig.txt
-    chown system system /system/etc/hmconfig.txt
-    chown audio audio /dev/pts29
-
-    mkdir /cal/secclk 0770 system system
-    chmod 0770 /cal/secclk
-    chown system system /cal/secclk
-
-    chown root radio /sys/devices/platform/baseband_xmm_power/xmm_onoff
-
-    # Torch perms
-    chown system camera /sys/devices/platform/tegra-i2c.2/i2c-2/2-0053/torch
-    chmod 0660 /sys/devices/platform/tegra-i2c.2/i2c-2/2-0053/torch
+service nvcpud /system/bin/nvcpud
+    class main
+    user root
+    group root
 
 service charger /charger
     class charger
@@ -352,19 +382,10 @@ service charger /charger
 #    user system
 #    group system
 
-on boot
-    chown system system /sys/power/lge_logstart
-    chmod 0660 /sys/power/lge_logstart
-
 service lgsecclk /system/bin/lgsecclkserver
     class main
     user system
     group system sdcard_rw media_rw
-
-# restart when servicemanager is restarted
-on property:init.svc.servicemanager=restarting
-    restart lgsecclk
-    restart lgdrm
 
 ########################################
 # CAPP_DRM
@@ -374,35 +395,16 @@ service lgdrm /system/bin/lgdrmserver
     user system
     group sdcard_rw media_rw system radio media
 
+# restart when servicemanager is restarted
+on property:init.svc.servicemanager=restarting
+    restart lgsecclk
+    restart lgdrm
+
 service tf_daemon /system/bin/tf_daemon -storageDir /cal/widevine -d
     class main
     user system
     group shell system
     oneshot
-
-on post-fs-data
-    # create directory for lgdrm
-    mkdir /data/lgdrm 0770 system media
-    setprop vold.post_fs_data_done 1
-
-    # Set buffer sizes from stock (lower readmax)
-    setprop net.tcp.buffersize.default 4096,87380,393216,4096,16384,110208
-    setprop net.tcp.buffersize.wifi    524288,1048576,2097152,262144,524288,1048576
-    setprop net.tcp.buffersize.lte     524288,1048576,2097152,262144,524288,1048576
-    setprop net.tcp.buffersize.umts    4094,87380,393216,4096,16384,110208
-    setprop net.tcp.buffersize.hspa    4094,87380,393216,4096,16384,110208
-    setprop net.tcp.buffersize.hsupa   4094,87380,393216,4096,16384,110208
-    setprop net.tcp.buffersize.hsdpa   4094,87380,393216,4096,16384,110208
-    setprop net.tcp.buffersize.edge    4093,26280,35040,4096,16384,35040
-    setprop net.tcp.buffersize.gprs    4092,8760,11680,4096,8760,11680
-
-# Hardware tunable perms
-    chown root system /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning
-    chown root system /sys/devices/platform/tspdrv/nforce_timed
-    chmod 0664 /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning
-    chmod 0664 /sys/devices/platform/tspdrv/nforce_timed
-    restorecon /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning
-    restorecon /sys/devices/platform/tspdrv/nforce_timed
 
 service insmod_rawip /system/bin/init.rawip 1
     user root
