@@ -57,6 +57,11 @@ public class X3RIL extends RIL implements CommandsInterface {
         send(rr);
     }
 
+    @Override
+    public void setCellInfoListRate(int rateInMillis, Message response) {
+        return;
+    }
+
     static final int RIL_UNSOL_LGE_BATTERY_LEVEL_UPDATE = 1050;
     static final int RIL_UNSOL_LGE_XCALLSTAT = 1053;
     static final int RIL_UNSOL_LGE_RESTART_RILD = 1055;
