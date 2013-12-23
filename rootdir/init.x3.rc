@@ -194,6 +194,12 @@ on boot
     #write /sys/module/cpuidle_t3/parameters/lp2_0_in_idle 0
     write /sys/module/cpuidle/parameters/lp2_in_idle 0
 
+    write /sys/module/cpu_tegra/parameters/force_policy_max Y
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor interactive
+    write /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor interactive
+    write /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor interactive
+    write /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor interactive
+
 # Interactive dynamic frequecy mode settings
     chown system system /sys/devices/system/cpu/cpufreq/interactive/boost_factor
     chmod 0660 /sys/devices/system/cpu/cpufreq/interactive/boost_factor
