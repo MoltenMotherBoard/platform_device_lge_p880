@@ -18,7 +18,7 @@ debug.nfc.se=false
 ro.nfc.port=I2C
 lge.nfc.fwpatchv13=yes
 lge.nfc.indicator=yes
-lge.nfc.defaultonoff=on
+lge.nfc.defaultonoff=off
 
 wifi.interface=wlan0
 
