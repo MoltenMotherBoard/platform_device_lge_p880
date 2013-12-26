@@ -187,4 +187,7 @@
     <!-- Device supports LED flashlight -->
     <bool name="config_enableTorch">true</bool>
 
+    <!-- Indicate whether the SD card is accessible without removing the battery. -->
+    <bool name="config_batterySdCardAccessibility">true</bool>
+
 </resources>
