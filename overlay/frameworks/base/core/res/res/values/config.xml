@@ -191,4 +191,7 @@
 
     <bool name="config_intrusiveBatteryLed">true</bool>
 
+    <!-- Indicate whether the SD card is accessible without removing the battery. -->
+    <bool name="config_batterySdCardAccessibility">true</bool>
+
 </resources>
