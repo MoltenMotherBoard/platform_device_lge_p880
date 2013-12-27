@@ -130,4 +130,4 @@ PRODUCT_COPY_FILES += \
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
     ro.boot.selinux=permissive
 
-$(call inherit-product-if-exists, vendor/lge/p880/p880-vendor.mk)
+$(call inherit-product, vendor/lge/p880/p880-vendor.mk)
