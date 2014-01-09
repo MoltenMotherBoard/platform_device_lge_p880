@@ -45,10 +45,9 @@ TARGET_USERIMAGES_USE_EXT4 := true
 
 TARGET_SPECIFIC_HEADER_PATH := device/lge/p880/include
 
-BOARD_NO_ALLOW_DEQUEUE_CURRENT_BUFFER := true
-BOARD_USE_SKIA_LCDTEXT := true
 BOARD_EGL_CFG := device/lge/p880/configs/egl.cfg
 USE_OPENGL_RENDERER := true
+TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := true
 
 # Wifi related defines
 WPA_SUPPLICANT_VERSION      := VER_0_8_X
@@ -85,8 +84,6 @@ BOARD_CUSTOM_RECOVERY_KEYMAPPING := ../../device/lge/p880/recovery/recovery-keys
 BOARD_CHARGER_ENABLE_SUSPEND := true
 BOARD_BATTERY_DEVICE_NAME := battery
 
-ifeq ($(HAVE_SELINUX),true)
-
 BOARD_SEPOLICY_DIRS += \
     device/lge/p880/sepolicy
 
@@ -95,12 +92,6 @@ BOARD_SEPOLICY_UNION += \
     file.te \
     device.te \
     domain.te
-
-endif
-
-#TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := true
-
-BOARD_HARDWARE_CLASS := device/lge/p880/cmhw/
 
 # TWRP
 DEVICE_RESOLUTION := 720x1280
