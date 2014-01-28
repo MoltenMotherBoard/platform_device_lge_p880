@@ -2,7 +2,6 @@ bin/hdmid
 bin/lgdrmserver
 bin/lgsecclkserver
 bin/nvcpud
-bin/rild
 bin/tf_daemon
 lib/hw/camera.tegra.so
 lib/hw/gps.tegra.so
@@ -50,7 +49,6 @@ lib/lge-ril.so
 lib/libini.so
 lib/libril.so
 lib/libnvomx.so
-lib/libstagefrighthw.so
 lib/libnvodm_imager.so
 lib/libnvodm_query.so
 lib/libnvmm_contentpipe.so
