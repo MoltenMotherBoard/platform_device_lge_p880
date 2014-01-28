@@ -14,9 +14,6 @@
 # limitations under the License.
 #
 
-# The gps config appropriate for this device
-$(call inherit-product, device/common/gps/gps_eu_supl.mk)
-
 # This device is xhdpi
 PRODUCT_AAPT_CONFIG := normal hdpi xhdpi
 PRODUCT_AAPT_PREF_CONFIG := xhdpi
@@ -47,13 +44,16 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/nfcee_access.xml:system/etc/nfcee_access.xml \
     $(LOCAL_PATH)/configs/bcmdhd.cal:system/etc/wifi/bcmdhd.cal
 
+## Media
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/media_profiles.xml:system/etc/media_profiles.xml \
     $(LOCAL_PATH)/configs/media_codecs.xml:system/etc/media_codecs.xml \
-    $(LOCAL_PATH)/configs/nvcamera.conf:system/etc/nvcamera.conf
+    $(LOCAL_PATH)/configs/nvcamera.conf:system/etc/nvcamera.conf \
+    $(LOCAL_PATH)/configs/enctune.conf:system/etc/enctune.conf
 
 ## GPS
 PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/gps.conf:system/etc/gps.conf \
     $(LOCAL_PATH)/configs/lge.cer:system/etc/cert/lge.cer \
     $(LOCAL_PATH)/configs/hmconfig.txt:system/etc/hmconfig.txt
 
@@ -64,7 +64,7 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/touch_dev.kl:system/usr/keylayout/touch_dev.kl \
     $(LOCAL_PATH)/configs/touch_dev.idc:system/usr/idc/touch_dev.idc
 
-## ALSA Config
+## Audio config
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/audio_policy.conf:system/etc/audio_policy.conf \
     $(LOCAL_PATH)/configs/asound.conf:system/etc/asound.conf \

@@ -1,7 +1,7 @@
 # inherit from the proprietary version
 -include vendor/lge/p880/BoardConfigVendor.mk
 
-# Board nameing
+# Board naming
 TARGET_NO_RADIOIMAGE := true
 TARGET_BOARD_PLATFORM := tegra
 TARGET_BOOTLOADER_BOARD_NAME := x3
@@ -18,6 +18,10 @@ TARGET_CPU_SMP := true
 ARCH_ARM_HAVE_TLS_REGISTER := true
 ARCH_ARM_HAVE_32_BYTE_CACHE_LINE := true
 ARCH_ARM_USE_NON_NEON_MEMCPY := true
+
+# Optimization build flags
+TARGET_GLOBAL_CFLAGS += -mtune=cortex-a9 -mfpu=neon -mfloat-abi=softfp
+TARGET_GLOBAL_CPPFLAGS += -mtune=cortex-a9 -mfpu=neon -mfloat-abi=softfp
 
 BOARD_KERNEL_CMDLINE := 
 BOARD_KERNEL_BASE := 0x10000000
@@ -49,6 +53,18 @@ BOARD_EGL_CFG := device/lge/p880/configs/egl.cfg
 USE_OPENGL_RENDERER := true
 TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := true
 
+# Old blobs support
+#BOARD_USE_MHEAP_SCREENSHOT := true
+#BOARD_EGL_SKIP_FIRST_DEQUEUE := true
+#BOARD_NEEDS_OLD_HWC_API := true
+#BOARD_EGL_WORKAROUND_BUG_10194508 := true
+
+# Enable WEBGL in WebKit
+ENABLE_WEBGL := true
+
+# Camera
+BOARD_CAMERA_HAVE_ISO := true
+
 # Wifi related defines
 WPA_SUPPLICANT_VERSION      := VER_0_8_X
 BOARD_WLAN_DEVICE           := bcmdhd
@@ -56,6 +72,7 @@ BOARD_WPA_SUPPLICANT_DRIVER := NL80211
 BOARD_WPA_SUPPLICANT_PRIVATE_LIB := lib_driver_cmd_bcmdhd
 BOARD_HOSTAPD_DRIVER        := NL80211
 BOARD_HOSTAPD_PRIVATE_LIB   := lib_driver_cmd_bcmdhd
+WIFI_BAND                   := 802_11_ABG
 WIFI_DRIVER_FW_PATH_PARAM   := "/sys/module/bcmdhd/parameters/firmware_path"
 WIFI_DRIVER_FW_PATH_STA     := "/system/vendor/firmware/fw_bcmdhd.bin"
 WIFI_DRIVER_FW_PATH_P2P     := "/system/vendor/firmware/fw_bcmdhd.bin"
@@ -83,6 +100,9 @@ BOARD_CUSTOM_RECOVERY_KEYMAPPING := ../../device/lge/p880/recovery/recovery-keys
 
 BOARD_CHARGER_ENABLE_SUSPEND := true
 BOARD_BATTERY_DEVICE_NAME := battery
+
+# Skip droiddoc build to save build time
+BOARD_SKIP_ANDROID_DOC_BUILD := true
 
 BOARD_SEPOLICY_DIRS += \
     device/lge/p880/sepolicy
