@@ -277,7 +277,7 @@ on boot
 
     # Torch perms
     chown system camera /sys/devices/platform/tegra-i2c.2/i2c-2/2-0053/torch
-    chmod 0666 /sys/devices/platform/tegra-i2c.2/i2c-2/2-0053/torch
+    chmod 0660 /sys/devices/platform/tegra-i2c.2/i2c-2/2-0053/torch
 
     # Hardware tunable perms
     chown root system /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning
