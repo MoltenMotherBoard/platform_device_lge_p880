@@ -3,9 +3,6 @@ $(call inherit-product, build/target/product/locales_full.mk)
 # The gps config appropriate for this device
 $(call inherit-product, device/common/gps/gps_eu_supl.mk)
 
-# Use common BCM stuff
-$(call inherit-product-if-exists, hardware/broadcom/wlan/bcmdhd/firmware/bcm4330/device-bcm.mk)
-
 DEVICE_PACKAGE_OVERLAYS += device/lge/p880/overlay
 
 PRODUCT_TAGS += dalvik.gc.type-precise
@@ -131,10 +128,6 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/prebuilt/51selinux:system/etc/init.d/51selinux
 
-# Temporarily...
-PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
-    ro.boot.selinux=permissive
-
 ## Camera blob workaround
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/cam_hack/bin/videorec:system/bin/videorec \
@@ -143,3 +136,9 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/cam_hack/lib/libstagefrighthw_old.bak:system/lib/libstagefrighthw_old.bak	
 	
 $(call inherit-product, vendor/lge/p880/p880-vendor.mk)
+
+# Setup Dalvik VM configs.
+$(call inherit-product, frameworks/native/build/phone-xhdpi-1024-dalvik-heap.mk)
+
+# Use common BCM stuff.
+$(call inherit-product-if-exists, hardware/broadcom/wlan/bcmdhd/firmware/bcm4330/device-bcm.mk)
