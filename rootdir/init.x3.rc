@@ -318,7 +318,7 @@ service rmnet2_down /system/bin/init.rmnet-down 2
     disabled
     oneshot
 
-service dhcpcd_wlan0 /system/bin/dhcpcd -aBKAL
+service dhcpcd_wlan0 /system/bin/dhcpcd -aABDKL
     class core
     disabled
     oneshot
@@ -335,6 +335,14 @@ service dhcpcd_p2p /system/bin/dhcpcd -aABKL
 
 service iprenew_p2p /system/bin/dhcpcd -n
     class main
+    disabled
+    oneshot
+
+service dhcpcd_bt-pan /system/bin/dhcpcd -BKLG
+    disabled
+    oneshot
+
+service iprenew_bt-pan /system/bin/dhcpcd -n
     disabled
     oneshot
 
