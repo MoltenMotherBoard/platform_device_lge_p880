@@ -141,10 +141,6 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/prebuilt/51selinux:system/etc/init.d/51selinux
 
-# Temporarily...
-PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
-    ro.boot.selinux=permissive
-
 # Setup Dalvik VM configs.
 $(call inherit-product, frameworks/native/build/phone-xhdpi-1024-dalvik-heap.mk)
 
