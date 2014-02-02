@@ -116,8 +116,8 @@ PRODUCT_PACKAGES += \
     libnfc_jni \
     Nfc \
     Tag \
-    lights.x3 \
-    libstagefrighthw
+    libstagefrighthw \
+    nfc.x3
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/prebuilt/init.rmnet:system/bin/init.rmnet \
