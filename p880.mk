@@ -129,8 +129,9 @@ PRODUCT_PACKAGES += \
 
 # Source-built
 PRODUCT_PACKAGES += \
+    libstagefrighthw \
     lights.x3 \
-    libstagefrighthw
+    nfc.x3
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/prebuilt/init.rmnet:system/bin/init.rmnet \
