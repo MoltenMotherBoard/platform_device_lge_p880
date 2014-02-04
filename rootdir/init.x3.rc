@@ -49,6 +49,8 @@ on fs
     write /data/misc/wifi/firmware_path ""
     chmod 0666 /data/misc/wifi/firmware_path
 
+    setprop ro.crypto.fuse_sdcard true
+
 on boot
     insmod /system/lib/modules/bthid.ko
     mkdir /data/misc/bluetooth 0770 bluetooth bluetooth
@@ -202,6 +204,7 @@ on boot
 
 #LGE_CHANGE_S 20121126, hwansuk.kang@lge.com [data] TCP increase rmem_max value for downlink data throughput
     write /proc/sys/net/core/rmem_max 393213
+    write /proc/sys/net/core/wmem_max 393213
 #LGE_CHANGE_E 20121126, hwansuk.kang@lge.com [data] TCP increase rmem_max value for downlink data throughput
 
 #LGE_CHANGE_S 20120720, hwansuk.kang@lge.com [data] Disable IPv6 for mobile network
