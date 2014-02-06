@@ -33,66 +33,38 @@ static uint8_t pn544_eedata_settings[][4] = {
     ,{0x00,0x9B,0xDD,0x1C} // GSP setting for this threshold
     ,{0x00,0x9B,0x84,0x13} // ANACM2 setting
     ,{0x00,0x99,0x81,0x7F} // ANAVMID setting PCD
-#ifdef GROUPER
     ,{0x00,0x99,0x7A,0x3E} // ANATXMODGSPON
     ,{0x00,0x99,0x77,0xFF} // ANATXCWGSPON
-#endif
     ,{0x00,0x99,0x31,0x70} // ANAVMID setting PICC
-#ifdef GROUPER
     ,{0x00,0x99,0x2A,0xF5} // ANATXMODGSN-TYPEB
-#ifdef grouper
     ,{0x00,0x99,0x29,0xF5} // ANATXMODGSN-TYPEA
-#else
-    ,{0x00,0x99,0x29,0xFF} // ANATXMODGSN-TYPEA
-#endif
-#endif
     // For tegra we don't override load modulation settings.
 
     // Enable PBTF
-#ifdef LGE_X3
-    ,{0x00,0x98,0x00,0x0F}
-#else
     ,{0x00,0x98,0x00,0x3F} // SECURE_ELEMENT_CONFIGURATION - No Secure Element
-#endif
     ,{0x00,0x9F,0x09,0x00} // SWP_PBTF_RFU
-#ifdef LGE_X3
-    ,{0x00,0x9F,0x0A,0x01}
-#else
     ,{0x00,0x9F,0x0A,0x05} // SWP_PBTF_RFLD  --> RFLEVEL Detector for PBTF
-#endif
     ,{0x00,0x9E,0xD1,0xA1} //
 
     // Change RF Level Detector ANARFLDWU
     ,{0x00,0x99,0x23,0x00} // Default Value is 0x01
 
     // Low-power polling
-#ifdef LGE_X3
-    ,{0x00,0x9E,0x74,0xB0}
-#elif defined GROUPER
     ,{0x00,0x9E,0x74,0xB0} // Default Value is 0x00, bits 0->2: sensitivity (0==max,  6==min),
-#else /* Nvidia */
-    ,{0x00,0x9E,0x74,0x00} // Default Value is 0x00, bits 0->2: sensitivity (0==max,  6==min),
-#endif
                            // bit 3: RFU,
                            // bits 4,5 hybrid low-power: # of low-power polls per regular poll
                            // bit 6: RFU
                            // bit 7: (0 -> disabled, 1 -> enabled)
-#ifdef LGE_X3
-    ,{0x00,0x9E,0x7D,0x00}
-#else
     ,{0x00,0x9E,0x7D,0xB0} // bits 0->3: RFU,
-#endif
                            // bits 4,5: # retries after low power detection
                            // 0=1 retry, 1=2 retry, 2=3 retry, 3=4 retry
                            // bit 6: RFU,
                            // bit 7: Enable or disable retry mechanism (0: disable, 1: enable)
     ,{0x00,0x9F,0x28,0x01} // bits 0->7: # of measurements per low-power poll
 
-#ifndef LGE_X3
     // Polling Loop - Card Emulation Timeout
     ,{0x00,0x9F,0x35,0x14} // Time for which PN544 stays in Card Emulation mode after leaving RF field
     ,{0x00,0x9F,0x36,0x60} // Default value 0x0411 = 50 ms ---> New Value : 0x1460 = 250 ms
-#endif
 
     //LLC Timer
     ,{0x00,0x9C,0x31,0x00} // Guard host time-out in ms (MSB)
@@ -122,10 +94,9 @@ static uint8_t pn544_eedata_settings[][4] = {
     // Setting for EMD support for ISO 14443-4 Reader
     ,{0x00,0x9F,0x09,0x00} // 0x00 - Disable EMD support, 0x01 - Enable EMD support
 
-#ifdef LGE_X3
-    ,{0x00,0x9C,0x5C,0x06}
-    ,{0x00,0x9C,0x5D,0x81}
-#endif
+    // Only in LGE X3
+    ,{0x00,0x9C,0x5C,0x06} //
+    ,{0x00,0x9C,0x5D,0x81} //
 };
 
 static int pn544_close(hw_device_t *dev) {
