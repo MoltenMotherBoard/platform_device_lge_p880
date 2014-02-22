@@ -128,6 +128,9 @@ PRODUCT_PACKAGES += \
 
 # Source-built
 PRODUCT_PACKAGES += \
+    audio.primary.tegra \
+    audio_policy.tegra \
+    camera.tegra \
     libstagefrighthw \
     lights.x3 \
     nfc.x3
