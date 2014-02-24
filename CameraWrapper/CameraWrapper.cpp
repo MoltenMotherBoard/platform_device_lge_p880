@@ -93,21 +93,21 @@ static int check_vendor_module()
     return rv;
 }
 
-const static char * iso_values[] = {"auto,ISO50,ISO100,ISO200,ISO400,ISO800", "auto"}; 
+const static char * iso_values[] = {"auto,ISO100,ISO200,ISO400,ISO800", "auto"};
 
 static char * camera_fixup_getparams(int id, const char * settings)
 {
     android::CameraParameters params;
     params.unflatten(android::String8(settings));
-#if 0
+
     // ISO modes
     params.set(android::CameraParameters::KEY_SUPPORTED_ISO_MODES, iso_values[id]);
 
     // Exposure compensation
-    params.set(android::CameraParameters::KEY_MAX_EXPOSURE_COMPENSATION, 4);
-    params.set(android::CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION, -4);
-    params.set(android::CameraParameters::KEY_EXPOSURE_COMPENSATION_STEP, "0.5"); // Must use string form because floats are not supported.
-#endif
+    params.set(android::CameraParameters::KEY_MAX_EXPOSURE_COMPENSATION, 2);
+    params.set(android::CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION, -2);
+    params.set(android::CameraParameters::KEY_EXPOSURE_COMPENSATION_STEP, 1);
+
     android::String8 strParams = params.flatten();
     char *ret = strdup(strParams.string());
 
@@ -119,12 +119,10 @@ char * camera_fixup_setparams(int id, const char * settings)
 {
     android::CameraParameters params;
     params.unflatten(android::String8(settings));
-#if 0
+
     const char* isoMode = params.get(android::CameraParameters::KEY_ISO_MODE);
     if (isoMode) {
-        if (strcmp(isoMode, "ISO50") == 0)
-            params.set(android::CameraParameters::KEY_ISO_MODE, 50);
-        else if (strcmp(isoMode, "ISO100") == 0)
+        if (strcmp(isoMode, "ISO100") == 0)
             params.set(android::CameraParameters::KEY_ISO_MODE, 100);
         else if (strcmp(isoMode, "ISO200") == 0)
             params.set(android::CameraParameters::KEY_ISO_MODE, 200);
@@ -133,7 +131,7 @@ char * camera_fixup_setparams(int id, const char * settings)
         else if (strcmp(isoMode, "ISO800") == 0)
             params.set(android::CameraParameters::KEY_ISO_MODE, 800);
     }
-#endif
+
     android::String8 strParams = params.flatten();
     char *ret = strdup(strParams.string());
 
