@@ -20,17 +20,11 @@ $(call inherit-product, vendor/omni/config/gsm.mk)
 # Inherit from the common AOSP product configuration
 $(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base_telephony.mk)
 
-TARGET_BOOTANIMATION_NAME := vertical-720x1280
-
 # Inherit from our custom product configuration
 $(call inherit-product, vendor/omni/config/common.mk)
 
 # Inherit device configuration
 $(call inherit-product, device/lge/p880/p880.mk)
-
-# Release name and versioning
-PRODUCT_RELEASE_NAME := Optimus 4X HD
-#PRODUCT_VERSION_DEVICE_SPECIFIC :=
 
 # Device identifier. This must come after all inclusions
 PRODUCT_DEVICE := p880
