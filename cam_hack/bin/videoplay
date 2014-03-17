@@ -1,0 +1,15 @@
+#!/bin/sh
+############################################
+# This script enables hw decoding          #
+# But disables video recording             #
+############################################
+
+oldBlob=/system/lib/libstagefrighthw_old.bak
+newBlob=/system/lib/libstagefrighthw_new.bak
+usedBlob=/system/lib/libstagefrighthw.so
+
+busybox cp -f /system/lib/libstagefrighthw_new.bak /system/lib/libstagefrighthw.so
+echo "File replaced!"
+echo "Rebooting in 3 sec!"
+busybox sleep 3
+reboot
