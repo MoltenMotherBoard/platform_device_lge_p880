@@ -10,6 +10,6 @@ usedBlob=/system/lib/libstagefrighthw.so
 
 busybox cp -f /system/lib/libstagefrighthw_old.bak /system/lib/libstagefrighthw.so
 echo "File replaced!"
-echo "Rebooting in 3 sec!"
-busybox sleep 3
-reboot
+echo "Killing mediaserver!"
+busybox killall mediaserver
+echo "Done!"
