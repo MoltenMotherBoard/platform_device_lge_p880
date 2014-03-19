@@ -9,6 +9,7 @@ newBlob=/system/lib/libstagefrighthw_new.bak
 usedBlob=/system/lib/libstagefrighthw.so
 
 busybox mount -o rw,remount /system
+busybox rm /system/lib/libstagefrighthw.so
 busybox cp -f /system/lib/libstagefrighthw_new.bak /system/lib/libstagefrighthw.so
 echo "File replaced!"
 echo "Killing mediaserver!"
