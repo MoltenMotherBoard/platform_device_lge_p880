@@ -32,3 +32,7 @@ persist.sys.strictmode.disable=1
 
 # Wakelock "Fix" the LG way..
 ro.ril.wake_lock_timeout=300000
+
+# Various Tweaks
+ro.media.enc.jpeg.quality=100
+wifi.supplicant_scan_interval=120
