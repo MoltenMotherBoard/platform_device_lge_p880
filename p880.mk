@@ -27,6 +27,7 @@ LOCAL_PATH := device/lge/p880
 ## Recovery
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/recovery/postrecoveryboot.sh:recovery/root/sbin/postrecoveryboot.sh \
+    $(LOCAL_PATH)/recovery/rebootrecovery.sh:recovery/root/sbin/rebootrecovery.sh \
     $(LOCAL_PATH)/recovery/recovery.sh:system/bin/setup-recovery \
     $(LOCAL_PATH)/recovery/twrp.fstab:recovery/root/etc/twrp.fstab
 
