@@ -2,6 +2,7 @@ bin/hdmid
 bin/lgdrmserver
 bin/lgsecclkserver
 bin/nvcpud
+bin/rild
 bin/tf_daemon
 lib/hw/camera.tegra.so
 lib/hw/gps.tegra.so
