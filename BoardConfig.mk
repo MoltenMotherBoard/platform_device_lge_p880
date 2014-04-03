@@ -128,3 +128,10 @@ TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
 
 TARGET_USE_CUSTOM_LUN_FILE_PATH := "/sys/devices/platform/tegra-udc.0/gadget/lun0/file"
 TW_INCLUDE_FB2PNG := true
+
+# MultiROM
+MR_INPUT_TYPE := type_a
+MR_INIT_DEVICES := device/lge/p880/mr_init_devices.c
+MR_DPI := xhdpi
+MR_FSTAB := device/lge/p880/recovery/twrp.fstab
+MR_KEXEC_MEM_MIN := 0x85000000
