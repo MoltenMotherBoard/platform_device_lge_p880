@@ -24,9 +24,6 @@
     <!-- If this is true, the screen will fade off. -->
     <bool name="config_animateScreenLights">false</bool>
 
-    <!-- If this is true, key chords can be used to take a screen record on the device. -->
-    <bool name="config_enableScreenrecordChord">false</bool>
-
     <string-array translatable="false" name="config_tether_usb_regexs">
         <item>"rndis0"</item>
     </string-array>
