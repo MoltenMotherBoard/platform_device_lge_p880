@@ -133,10 +133,10 @@ PRODUCT_COPY_FILES += \
 
 ## Camera blob workaround
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/cam_hack/bin/videorec:system/bin/videorec \
+    $(LOCAL_PATH)/cam_hack/bin/videorec:system/bin/videorec \	
     $(LOCAL_PATH)/cam_hack/bin/videoplay:system/bin/videoplay \
     $(LOCAL_PATH)/cam_hack/lib/libstagefrighthw_new.bak:system/lib/libstagefrighthw_new.bak \
-    $(LOCAL_PATH)/cam_hack/lib/libstagefrighthw_old.bak:system/lib/libstagefrighthw_old.bak	
+    $(LOCAL_PATH)/cam_hack/lib/libstagefrighthw_old.bak:system/lib/libstagefrighthw_new.old	
 	
 $(call inherit-product, vendor/lge/p880/p880-vendor.mk)
 
