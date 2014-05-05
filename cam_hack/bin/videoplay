@@ -1,4 +1,4 @@
-#!/system/bin/sh
+#!/bin/sh
 ############################################
 # This script enables hw decoding          #
 # But disables video recording             #
