@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef NV_OMX_PLUGIN_H_
+#ifndef NV_OMX_MASTER_H_
 
-#define NV_OMX_PLUGIN_H_
+#define NV_OMX_MASTER_H_
 
 #include <media/hardware/OMXPluginBase.h>
 
+#include <utils/threads.h>
+#include <utils/KeyedVector.h>
+#include <utils/List.h>
+#include <utils/String8.h>
+
 namespace android {
 
-struct NVOMXPlugin : public OMXPluginBase {
-    NVOMXPlugin(const char *filename);
-    virtual ~NVOMXPlugin();
+struct NVOMXMaster : public OMXPluginBase {
+    NVOMXMaster();
+    virtual ~NVOMXMaster();
 
     virtual OMX_ERRORTYPE makeComponentInstance(
             const char *name,
@@ -45,32 +50,19 @@ struct NVOMXPlugin : public OMXPluginBase {
             Vector<String8> *roles);
 
 private:
-    void *mLibHandle;
+    Mutex mLock;
+    List<OMXPluginBase *> mPlugins;
+    KeyedVector<String8, OMXPluginBase *> mPluginByComponentName;
+    KeyedVector<OMX_COMPONENTTYPE *, OMXPluginBase *> mPluginByInstance;
 
-    typedef OMX_ERRORTYPE (*InitFunc)();
-    typedef OMX_ERRORTYPE (*DeinitFunc)();
-    typedef OMX_ERRORTYPE (*ComponentNameEnumFunc)(
-            OMX_STRING, OMX_U32, OMX_U32);
+    void addVendorPlugin();
+    void addPlugin(OMXPluginBase *plugin);
+    void clearPlugins();
 
-    typedef OMX_ERRORTYPE (*GetHandleFunc)(
-            OMX_HANDLETYPE *, OMX_STRING, OMX_PTR, OMX_CALLBACKTYPE *);
-
-    typedef OMX_ERRORTYPE (*FreeHandleFunc)(OMX_HANDLETYPE *);
-
-    typedef OMX_ERRORTYPE (*GetRolesOfComponentFunc)(
-            OMX_STRING, OMX_U32 *, OMX_U8 **);
-
-    InitFunc mInit;
-    DeinitFunc mDeinit;
-    ComponentNameEnumFunc mComponentNameEnum;
-    GetHandleFunc mGetHandle;
-    FreeHandleFunc mFreeHandle;
-    GetRolesOfComponentFunc mGetRolesOfComponentHandle;
-
-    NVOMXPlugin(const NVOMXPlugin &);
-    NVOMXPlugin &operator=(const NVOMXPlugin &);
+    NVOMXMaster(const NVOMXMaster &);
+    NVOMXMaster &operator=(const NVOMXMaster &);
 };
 
 }  // namespace android
 
-#endif  // NV_OMX_PLUGIN_H_
+#endif  // NV_OMX_MASTER_H_
