@@ -21,14 +21,12 @@
 
 #include <media/hardware/HardwareAPI.h>
 
+OMX_COMPONENTTYPE *gOMXDrmPlayComponent;
+
 namespace android {
 
-OMXPluginBase *createOMXPlugin() {
-    return new NVOMXPlugin;
-}
-
-NVOMXPlugin::NVOMXPlugin()
-    : mLibHandle(dlopen("libnvomx.so", RTLD_NOW)),
+NVOMXPlugin::NVOMXPlugin(const char *filename)
+    : mLibHandle(dlopen(filename, RTLD_NOW)),
       mInit(NULL),
       mDeinit(NULL),
       mComponentNameEnum(NULL),
