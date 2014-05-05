@@ -140,5 +140,6 @@ $(call inherit-product, vendor/lge/p880/p880-vendor.mk)
 # Setup Dalvik VM configs.
 $(call inherit-product, frameworks/native/build/phone-xhdpi-1024-dalvik-heap.mk)
 
-# Use common BCM stuff.
+# Use common BCM stuff
 $(call inherit-product-if-exists, hardware/broadcom/wlan/bcmdhd/firmware/bcm4330/device-bcm.mk)
+$(call inherit-product-if-exists, hardware/broadcom/wlan/bcmdhd/config/config-bcm.mk)
