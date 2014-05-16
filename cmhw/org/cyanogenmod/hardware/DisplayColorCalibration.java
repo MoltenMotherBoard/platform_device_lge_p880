@@ -29,7 +29,7 @@ public class DisplayColorCalibration {
         return 255;
     }
     public static int getDefValue()  {
-        return 217;
+        return getMaxValue();
     }
     public static int getMinValue()  {
         return 0;
