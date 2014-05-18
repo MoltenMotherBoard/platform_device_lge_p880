@@ -3,7 +3,7 @@
 VENDOR=lge
 DEVICE=p880
 OUTDIR=vendor/$VENDOR/$DEVICE
-MAKEFILE=../../../$OUTDIR/$DEVICE-vendor-blobs.mk
+MAKEFILE=../../../$OUTDIR/device-vendor-blobs.mk
 
 (cat << EOF) > $MAKEFILE
 # Copyright (C) 2012 The CyanogenMod Project
@@ -35,7 +35,7 @@ for FILE in `cat proprietary-files.txt | grep -v ^# | grep -v ^$`; do
     echo "    $OUTDIR/proprietary/$FILE:system/$FILE$LINEEND" >> $MAKEFILE
 done
 
-(cat << EOF) > ../../../$OUTDIR/$DEVICE-vendor.mk
+(cat << EOF) > ../../../$OUTDIR/device-vendor.mk
 # Copyright (C) 2012 The CyanogenMod Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -67,7 +67,7 @@ PRODUCT_COPY_FILES := \\
 # Pick up overlay for features that depend on non-open-source files
 DEVICE_PACKAGE_OVERLAYS := vendor/$VENDOR/$DEVICE/overlay
 
-\$(call inherit-product, vendor/$VENDOR/$DEVICE/$DEVICE-vendor-blobs.mk)
+\$(call inherit-product, vendor/$VENDOR/$DEVICE/device-vendor-blobs.mk)
 EOF
 
 (cat << EOF) > ../../../$OUTDIR/BoardConfigVendor.mk

@@ -24,11 +24,11 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base_telephony.mk)
 $(call inherit-product, vendor/omni/config/common.mk)
 
 # Inherit device configuration
-$(call inherit-product, device/lge/p880/p880.mk)
+$(call inherit-product, device/lge/p880/device.mk)
 
 # Device identifier. This must come after all inclusions
-PRODUCT_DEVICE := p880
 PRODUCT_NAME := omni_p880
+PRODUCT_DEVICE := p880
 PRODUCT_BRAND := LG
 PRODUCT_MODEL := LG-P880
 PRODUCT_MANUFACTURER := LGE
@@ -36,4 +36,4 @@ PRODUCT_MANUFACTURER := LGE
 # Enable OmniTorch
 PRODUCT_PACKAGES += OmniTorch
 
-$(call inherit-product-if-exists, vendor/lge/p880/p880-vendor.mk)
+$(call inherit-product, vendor/lge/p880/device-vendor.mk)
