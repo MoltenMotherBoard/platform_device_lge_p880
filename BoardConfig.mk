@@ -98,7 +98,7 @@ BOARD_HAL_STATIC_LIBRARIES := libhealthd.x3
 COMMON_GLOBAL_CFLAGS += -DMR0_CAMERA_BLOB -DNEEDS_VECTORIMPL_SYMBOLS
 
 # Radio fixes
-#BOARD_RIL_CLASS := ../../../device/lge/p880/ril/
+BOARD_RIL_CLASS := ../../../device/lge/p880/ril/
 
 BOARD_CUSTOM_GRAPHICS := ../../../device/lge/p880/recovery/recovery-gfx.c
 BOARD_CUSTOM_RECOVERY_KEYMAPPING := ../../device/lge/p880/recovery/recovery-keys.c
