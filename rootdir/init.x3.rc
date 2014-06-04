@@ -416,4 +416,9 @@ service rmmod_rawip /system/bin/init.rawip 0
 
 on property:dev.bootcomplete=1
     write /sys/devices/platform/tegra-i2c.0/i2c-0/0-0039/run_calibration 1
-    write /sys/kernel/mm/ksm/deferred_timer 1
+
+# KSM
+write /sys/kernel/mm/ksm/pages_to_scan 100
+write /sys/kernel/mm/ksm/sleep_millisecs 500
+write /sys/kernel/mm/ksm/deferred_timer 1
+write /sys/kernel/mm/ksm/run 1
