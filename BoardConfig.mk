@@ -71,9 +71,6 @@ ENABLE_WEBGL := true
 # Camera
 BOARD_CAMERA_HAVE_ISO := true
 
-# External apps on SD
-TARGET_EXTERNAL_APPS = sdcard1
-
 # Wifi related defines
 WPA_SUPPLICANT_VERSION      := VER_0_8_X
 BOARD_WLAN_DEVICE           := bcmdhd
