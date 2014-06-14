@@ -1,0 +1,25 @@
+From 87825ea6863b0405b8cb18f6d3122f44b6b26aca Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Sat, 14 Jun 2014 17:44:01 +0200
+Subject: [PATCH 3/4] Support OpenJDK too
+
+---
+ core/main.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/core/main.mk b/core/main.mk
+index d424b25..ead6029 100644
+--- a/core/main.mk
++++ b/core/main.mk
+@@ -149,7 +149,7 @@ $(info You use OpenJDK but only Sun/Oracle JDK is supported.)
+ $(info Please follow the machine setup instructions at)
+ $(info $(space)$(space)$(space)$(space)https://source.android.com/source/download.html)
+ $(info ************************************************************)
+-$(error stop)
++# $(error stop)
+ endif
+ 
+ # Check for the correct version of java
+-- 
+1.8.3.2
+
