@@ -137,6 +137,11 @@ PRODUCT_PACKAGES += \
     lights.x3 \
     nfc.x3
 
+# Other packages
+PRODUCT_PACKAGES += \
+    Launcher3 \
+    Camera2
+
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/prebuilt/init.rawip:system/bin/init.rawip \
     $(LOCAL_PATH)/prebuilt/init.rmnet:system/bin/init.rmnet \
