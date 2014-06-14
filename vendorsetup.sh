@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013 The OmniROM Project
+# Copyright (C) 2013 P880-Dev
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,4 +14,4 @@
 # limitations under the License.
 #
 
-add_lunch_combo omni_p880-userdebug
+add_lunch_combo p880-userdebug

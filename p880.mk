@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013 The OmniROM Project
+# Copyright (C) 2013 P880-Dev
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,26 +14,17 @@
 # limitations under the License.
 #
 
-# Get the prebuilt list of APNs
-$(call inherit-product, vendor/omni/config/gsm.mk)
-
 # Inherit from the common AOSP product configuration
 $(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base_telephony.mk)
-
-# Inherit from our custom product configuration
-$(call inherit-product, vendor/omni/config/common.mk)
 
 # Inherit device configuration
 $(call inherit-product, device/lge/p880/device.mk)
 
 # Device identifier. This must come after all inclusions
-PRODUCT_NAME := omni_p880
+PRODUCT_NAME := p880
 PRODUCT_DEVICE := p880
 PRODUCT_BRAND := LG
-PRODUCT_MODEL := LG-P880
+PRODUCT_MODEL := P880
 PRODUCT_MANUFACTURER := LGE
-
-# Enable OmniTorch
-PRODUCT_PACKAGES += OmniTorch
 
 $(call inherit-product, vendor/lge/p880/device-vendor.mk)
