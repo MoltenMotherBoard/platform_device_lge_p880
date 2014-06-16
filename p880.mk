@@ -154,3 +154,10 @@ $(call inherit-product, frameworks/native/build/phone-xhdpi-1024-dalvik-heap.mk)
 # Use common BCM stuff
 $(call inherit-product-if-exists, hardware/broadcom/wlan/bcmdhd/firmware/bcm4330/device-bcm.mk)
 $(call inherit-product-if-exists, hardware/broadcom/wlan/bcmdhd/config/config-bcm.mk)
+
+# Various tweaks
+PRODUCT_PROPERTY_OVERRIDES += \
+    view.scroll_friction=1 \
+    ro.min_pointer_dur=8 \
+    ro.min_fling_velocity=8000 \
+    ro.max_fling_velocity=16000
