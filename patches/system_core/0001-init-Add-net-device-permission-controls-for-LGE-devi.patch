@@ -1,0 +1,43 @@
+From 62cf559b521bda04cc1e7ccd62dc88f61d2b8531 Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Tue, 17 Jun 2014 17:14:48 +0200
+Subject: [PATCH] init: Add net device permission controls for LGE devices
+
+---
+ init/property_service.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/init/property_service.c b/init/property_service.c
+index 9ac2781..0720c2d 100644
+--- a/init/property_service.c
++++ b/init/property_service.c
+@@ -94,6 +94,15 @@ struct {
+     { "persist.security.", AID_SYSTEM,   0 },
+     { "persist.service.bdroid.", AID_BLUETOOTH,   0 },
+     { "selinux."         , AID_SYSTEM,   0 },
++    { "net.pdp0",         AID_RADIO,    AID_RADIO },
++    { "net.pdp1",         AID_RADIO,    AID_RADIO },
++    { "net.pdp2",         AID_RADIO,    AID_RADIO },
++    { "net.pdp3",         AID_RADIO,    AID_RADIO },
++    { "net.pdp4",         AID_RADIO,    AID_RADIO },
++    { "net.vsnet0",       AID_RADIO,    AID_RADIO },
++    { "net.vsnet1",       AID_RADIO,    AID_RADIO },
++    { "net.vsnet2",       AID_RADIO,    AID_RADIO },
++    { "net.vsnet3",       AID_RADIO,    AID_RADIO },
+     { NULL, 0, 0 }
+ };
+ 
+@@ -108,6 +117,10 @@ struct {
+ } control_perms[] = {
+     { "dumpstate",AID_SHELL, AID_LOG },
+     { "ril-daemon",AID_RADIO, AID_RADIO },
++    { "rawip_vsnet1",AID_RADIO, AID_RADIO },
++    { "rawip_vsnet2",AID_RADIO, AID_RADIO },
++    { "rawip_vsnet3",AID_RADIO, AID_RADIO },
++    { "rawip_vsnet4",AID_RADIO, AID_RADIO },
+      {NULL, 0, 0 }
+ };
+ 
+-- 
+1.8.3.2
+
