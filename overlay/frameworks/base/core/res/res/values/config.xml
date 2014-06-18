@@ -208,6 +208,9 @@
         <item>255</item>
     </integer-array>
 
+    <!-- Boolean indicating if current platform supports BLE peripheral mode -->
+    <bool name="config_bluetooth_le_peripheral_mode_supported">true</bool>
+
     <!-- MMS user agent string -->
     <string name="config_mms_user_agent" translatable="false">LG-Android-MMS</string>
 
