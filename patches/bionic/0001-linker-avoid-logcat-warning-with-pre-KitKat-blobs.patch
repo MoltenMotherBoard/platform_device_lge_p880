@@ -1,0 +1,31 @@
+From 6aa6eb67d5ab9ae5ecd1c87b967709941d7c9323 Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Thu, 19 Jun 2014 23:23:03 +0200
+Subject: [PATCH] linker: avoid logcat warning with pre-KitKat blobs
+
+---
+ linker/linker.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/linker/linker.cpp b/linker/linker.cpp
+index 623be29..ee90d55 100644
+--- a/linker/linker.cpp
++++ b/linker/linker.cpp
+@@ -1,4 +1,4 @@
+-/*
++t/*
+  * Copyright (C) 2008, 2009 The Android Open Source Project
+  * All rights reserved.
+  *
+@@ -1531,7 +1531,7 @@ static bool soinfo_link_image(soinfo* si) {
+          * phdr_table_protect_segments() after all of them are applied
+          * and all constructors are run.
+          */
+-        DL_WARN("%s has text relocations. This is wasting memory and is "
++        DEBUG("%s has text relocations. This is wasting memory and is "
+                 "a security risk. Please fix.", si->name);
+         if (phdr_table_unprotect_segments(si->phdr, si->phnum, si->load_bias) < 0) {
+             DL_ERR("can't unprotect loadable segments for \"%s\": %s",
+-- 
+1.8.3.2
+
