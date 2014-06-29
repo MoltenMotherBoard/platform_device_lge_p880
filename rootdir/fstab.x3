@@ -1,7 +1,7 @@
 /dev/block/platform/sdhci-tegra.3/by-name/LNX   /boot         emmc  defaults      defaults
 /dev/block/platform/sdhci-tegra.3/by-name/SOS   /recovery     emmc  defaults      defaults
 /dev/block/platform/sdhci-tegra.3/by-name/APP   /system       f2fs  ro,discard,nodiratime,inline_xattr,errors=recover                       wait
-/dev/block/platform/sdhci-tegra.3/by-name/UDA   /data         f2fs  noatime,nosuid,nodev,discard,nodiratime,inline_xattr,errors=recover     wait
+/dev/block/platform/sdhci-tegra.3/by-name/UDA   /data         f2fs  rw,noatime,nosuid,nodev,discard,nodiratime,inline_xattr,errors=recover  wait,nonremovable,encryptable=footer,length=-16384
 /dev/block/platform/sdhci-tegra.3/by-name/CAC   /cache        f2fs  noatime,nosuid,nodev,discard,nodiratime,inline_xattr,errors=recover     wait
 /dev/block/platform/sdhci-tegra.3/by-name/CAL   /cal          ext4  nosuid,nodev,barrier=1  wait
 /dev/block/platform/sdhci-tegra.3/by-name/DRM   /persist-lg   ext4  nosuid,nodev,barrier=1  wait
