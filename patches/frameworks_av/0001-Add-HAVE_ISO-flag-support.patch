@@ -1,13 +1,13 @@
-From efb07c9e3397518e0657864a7b4d7e2baf020c4f Mon Sep 17 00:00:00 2001
+From 05b75f918c1a7426686f1bf0d7887792619b47de Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
-Date: Tue, 24 Jun 2014 15:43:14 +0200
-Subject: [PATCH] Add HAVE_ISO flag suppupport
+Date: Tue, 5 Aug 2014 20:32:39 +0200
+Subject: [PATCH] Add HAVE_ISO flag support
 
 ---
  camera/Android.mk                 |  4 ++++
- camera/CameraParameters.cpp       | 44 ++++++++++++++++++++++++++++++++++++---
- include/camera/CameraParameters.h | 11 ++++++++++
- 3 files changed, 56 insertions(+), 3 deletions(-)
+ camera/CameraParameters.cpp       | 40 +++++++++++++++++++++++++++++++++++++--
+ include/camera/CameraParameters.h |  6 ++++++
+ 3 files changed, 48 insertions(+), 2 deletions(-)
 
 diff --git a/camera/Android.mk b/camera/Android.mk
 index 5cedab0..bed8b9a 100644
@@ -25,47 +25,33 @@ index 5cedab0..bed8b9a 100644
  
  include $(BUILD_SHARED_LIBRARY)
 diff --git a/camera/CameraParameters.cpp b/camera/CameraParameters.cpp
-index c51f265..59261f6 100644
+index c51f265..2fb0a7b 100644
 --- a/camera/CameraParameters.cpp
 +++ b/camera/CameraParameters.cpp
-@@ -88,9 +88,16 @@ const char CameraParameters::KEY_MAX_NUM_DETECTED_FACES_HW[] = "max-num-detected
- const char CameraParameters::KEY_MAX_NUM_DETECTED_FACES_SW[] = "max-num-detected-faces-sw";
- const char CameraParameters::KEY_RECORDING_HINT[] = "recording-hint";
- const char CameraParameters::KEY_VIDEO_SNAPSHOT_SUPPORTED[] = "video-snapshot-supported";
-+const char CameraParameters::KEY_FULL_VIDEO_SNAP_SUPPORTED[] = "full-video-snap-supported";
- const char CameraParameters::KEY_VIDEO_STABILIZATION[] = "video-stabilization";
+@@ -92,6 +92,11 @@ const char CameraParameters::KEY_VIDEO_STABILIZATION[] = "video-stabilization";
  const char CameraParameters::KEY_VIDEO_STABILIZATION_SUPPORTED[] = "video-stabilization-supported";
  const char CameraParameters::KEY_LIGHTFX[] = "light-fx";
-+const char CameraParameters::KEY_AE_BRACKET_HDR[] = "ae-bracket-hdr";
-+
+ 
 +#ifdef HAVE_ISO
 +const char CameraParameters::KEY_SUPPORTED_ISO_MODES[] = "iso-values";
 +const char CameraParameters::KEY_ISO_MODE[] = "iso";
 +#endif
- 
++
  const char CameraParameters::TRUE[] = "true";
  const char CameraParameters::FALSE[] = "false";
-@@ -131,7 +138,8 @@ const char CameraParameters::FLASH_MODE_RED_EYE[] = "red-eye";
- const char CameraParameters::FLASH_MODE_TORCH[] = "torch";
- 
- // Values for scene mode settings.
--const char CameraParameters::SCENE_MODE_AUTO[] = "auto";
-+const char CameraParameters::SCENE_MODE_AUTO[] = "auto"; // corresponds to CAMERA_BESTSHOT_OFF in HAL
-+const char CameraParameters::SCENE_MODE_ASD[] = "asd";   // corresponds to CAMERA_BESTSHOT_AUTO in HAL
- const char CameraParameters::SCENE_MODE_ACTION[] = "action";
- const char CameraParameters::SCENE_MODE_PORTRAIT[] = "portrait";
- const char CameraParameters::SCENE_MODE_LANDSCAPE[] = "landscape";
-@@ -236,6 +244,9 @@ void CameraParameters::unflatten(const String8 &params)
+ const char CameraParameters::FOCUS_DISTANCE_INFINITY[] = "Infinity";
+@@ -236,6 +241,10 @@ void CameraParameters::unflatten(const String8 &params)
  
  void CameraParameters::set(const char *key, const char *value)
  {
++
 +    if (key == NULL || value == NULL)
 +        return;
 +
      // XXX i think i can do this with strspn()
      if (strchr(key, '=') || strchr(key, ';')) {
          //XXX ALOGE("Key \"%s\"contains invalid character (= or ;)", key);
-@@ -253,7 +264,7 @@ void CameraParameters::set(const char *key, const char *value)
+@@ -253,7 +262,7 @@ void CameraParameters::set(const char *key, const char *value)
  void CameraParameters::set(const char *key, int value)
  {
      char str[16];
@@ -74,7 +60,7 @@ index c51f265..59261f6 100644
      set(key, str);
  }
  
-@@ -318,6 +329,33 @@ static int parse_pair(const char *str, int *first, int *second, char delim,
+@@ -318,6 +327,33 @@ static int parse_pair(const char *str, int *first, int *second, char delim,
      return 0;
  }
  
@@ -108,7 +94,7 @@ index c51f265..59261f6 100644
  static void parseSizesList(const char *sizesStr, Vector<Size> &sizes)
  {
      if (sizesStr == 0) {
-@@ -346,7 +384,7 @@ static void parseSizesList(const char *sizesStr, Vector<Size> &sizes)
+@@ -346,7 +382,7 @@ static void parseSizesList(const char *sizesStr, Vector<Size> &sizes)
  void CameraParameters::setPreviewSize(int width, int height)
  {
      char str[32];
@@ -118,27 +104,18 @@ index c51f265..59261f6 100644
  }
  
 diff --git a/include/camera/CameraParameters.h b/include/camera/CameraParameters.h
-index d521543..0c1e0d3 100644
+index d521543..8c3ef3b 100644
 --- a/include/camera/CameraParameters.h
 +++ b/include/camera/CameraParameters.h
-@@ -99,6 +99,8 @@ public:
+@@ -98,6 +98,7 @@ public:
+     void getSupportedPictureSizes(Vector<Size> &sizes) const;
      void setPictureFormat(const char *format);
      const char *getPictureFormat() const;
- 
 +    void getMeteringAreaCenter(int * x, int *y) const;
-+
+ 
      void dump() const;
      status_t dump(int fd, const Vector<String16>& args) const;
- 
-@@ -505,6 +507,7 @@ public:
-     // captured pictures.
-     // Example value: "true" or "false". Read only.
-     static const char KEY_VIDEO_SNAPSHOT_SUPPORTED[];
-+    static const char KEY_FULL_VIDEO_SNAP_SUPPORTED[];
- 
-     // The state of the video stabilization. If set to true, both the
-     // preview stream and the recorded video stream are stabilized by
-@@ -529,6 +532,13 @@ public:
+@@ -529,6 +530,11 @@ public:
      // Example values: "lowlight,hdr".
      static const char KEY_LIGHTFX[];
  
@@ -147,19 +124,8 @@ index d521543..0c1e0d3 100644
 +    static const char KEY_ISO_MODE[];
 +#endif
 +
-+    static const char KEY_AE_BRACKET_HDR[];
-+
      // Value for KEY_ZOOM_SUPPORTED or KEY_SMOOTH_ZOOM_SUPPORTED.
      static const char TRUE[];
      static const char FALSE[];
-@@ -580,6 +590,7 @@ public:
- 
-     // Values for scene mode settings.
-     static const char SCENE_MODE_AUTO[];
-+    static const char SCENE_MODE_ASD[];
-     static const char SCENE_MODE_ACTION[];
-     static const char SCENE_MODE_PORTRAIT[];
-     static const char SCENE_MODE_LANDSCAPE[];
 -- 
 1.8.3.2
-
