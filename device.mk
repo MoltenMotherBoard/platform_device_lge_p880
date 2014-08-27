@@ -55,7 +55,7 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/gps.conf:system/etc/gps.conf \
     $(LOCAL_PATH)/configs/hmconfig.txt:system/etc/hmconfig.txt \
-    $(LOCAL_PATH)/configs/lge.cer:system/etc/cert/lge.cer
+    $(LOCAL_PATH)/configs/SuplRootCert:system/etc/SuplRootCert
 
 ## Input
 PRODUCT_COPY_FILES += \
