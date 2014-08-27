@@ -24,7 +24,7 @@ $(call inherit-product, device/lge/p880/device.mk)
 PRODUCT_NAME := p880
 PRODUCT_DEVICE := p880
 PRODUCT_BRAND := LG
-PRODUCT_MODEL := P880
+PRODUCT_MODEL := Optimus 4X HD (P880)
 PRODUCT_MANUFACTURER := LGE
 
 $(call inherit-product, vendor/lge/p880/device-vendor.mk)
