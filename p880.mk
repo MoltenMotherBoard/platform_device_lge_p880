@@ -133,11 +133,6 @@ PRODUCT_PACKAGES += \
     fibmap.f2fs \
     f2fstat
 
-# Filesystem management tools
-PRODUCT_PACKAGES += \
-    setup_fs \
-    e2fsck
-
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/prebuilt/init.rawip:system/bin/init.rawip \
     $(LOCAL_PATH)/prebuilt/init.rmnet:system/bin/init.rmnet \
