@@ -1,0 +1,1720 @@
+From 79ed892c7da1da83bf6d3b38b43fe398703682da Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Mon, 29 Sep 2014 23:18:32 +0200
+Subject: [PATCH] frameworks/native: massive improvements [*] include MR0
+ camera flags [*] register Tegra audio device as a service [*] miscellaneous
+ OMNI updates
+
+---
+ build/phone-xhdpi-1024-dalvik-heap.mk              |   4 +-
+ cmds/installd/commands.c                           |   1 +
+ cmds/installd/installd.c                           |   5 +
+ cmds/installd/installd.h                           |   3 +
+ cmds/installd/utils.c                              |   2 +-
+ cmds/servicemanager/service_manager.c              |   1 +
+ include/binder/IMemory.h                           |   3 +-
+ include/binder/MemoryHeapBaseIon.h                 |  51 +++++++++
+ include/binder/MemoryHeapPmem.h                    |  79 +++++++++++++
+ include/gui/ISurfaceComposer.h                     |   3 +-
+ include/gui/SurfaceComposerClient.h                |   6 +
+ libs/binder/IPCThreadState.cpp                     |   8 ++
+ libs/binder/MemoryBase.cpp                         |  10 ++
+ libs/binder/Parcel.cpp                             |  12 ++
+ libs/gui/IGraphicBufferProducer.cpp                |  20 +++-
+ libs/gui/ISurfaceComposer.cpp                      |   8 +-
+ libs/gui/SensorEventQueue.cpp                      |   3 +-
+ libs/gui/Surface.cpp                               |  24 ++--
+ libs/gui/SurfaceComposerClient.cpp                 |  75 ++++++++++++-
+ libs/gui/SurfaceControl.cpp                        |   4 +
+ libs/ui/GraphicBuffer.cpp                          |   2 +
+ opengl/libs/GLES2/gl2.cpp                          |   2 +-
+ services/sensorservice/Android.mk                  |   1 +
+ services/sensorservice/RotationVectorSensor2.cpp   | 125 +++++++++++++++++++++
+ services/sensorservice/RotationVectorSensor2.h     |  63 +++++++++++
+ services/sensorservice/SensorService.cpp           |  31 ++++-
+ services/surfaceflinger/Android.mk                 |   3 -
+ services/surfaceflinger/DisplayDevice.cpp          |  29 ++++-
+ services/surfaceflinger/DisplayDevice.h            |   4 +-
+ .../surfaceflinger/DisplayHardware/HWComposer.cpp  | 106 +++++++++--------
+ .../surfaceflinger/DisplayHardware/HWComposer.h    |   3 +-
+ services/surfaceflinger/Layer.cpp                  |   4 +-
+ .../RenderEngine/GLES11RenderEngine.cpp            |  43 ++++---
+ .../RenderEngine/GLES11RenderEngine.h              |   4 +-
+ .../RenderEngine/GLES20RenderEngine.cpp            |  41 +++++--
+ .../RenderEngine/GLES20RenderEngine.h              |   5 +-
+ .../surfaceflinger/RenderEngine/RenderEngine.cpp   |   8 +-
+ .../surfaceflinger/RenderEngine/RenderEngine.h     |   7 +-
+ services/surfaceflinger/SurfaceFlinger.cpp         |  81 ++++++++-----
+ services/surfaceflinger/SurfaceFlinger.h           |   8 +-
+ 40 files changed, 742 insertions(+), 150 deletions(-)
+ create mode 100644 include/binder/MemoryHeapBaseIon.h
+ create mode 100644 include/binder/MemoryHeapPmem.h
+ create mode 100644 services/sensorservice/RotationVectorSensor2.cpp
+ create mode 100644 services/sensorservice/RotationVectorSensor2.h
+
+diff --git a/build/phone-xhdpi-1024-dalvik-heap.mk b/build/phone-xhdpi-1024-dalvik-heap.mk
+index 221227d..e6af2f7 100644
+--- a/build/phone-xhdpi-1024-dalvik-heap.mk
++++ b/build/phone-xhdpi-1024-dalvik-heap.mk
+@@ -18,8 +18,8 @@
+ 
+ PRODUCT_PROPERTY_OVERRIDES += \
+     dalvik.vm.heapstartsize=8m \
+-    dalvik.vm.heapgrowthlimit=96m \
++    dalvik.vm.heapgrowthlimit=64m \
+     dalvik.vm.heapsize=256m \
+     dalvik.vm.heaptargetutilization=0.75 \
+-    dalvik.vm.heapminfree=512k \
++    dalvik.vm.heapminfree=2m \
+     dalvik.vm.heapmaxfree=8m
+diff --git a/cmds/installd/commands.c b/cmds/installd/commands.c
+index 84ad204..d1832a8 100644
+--- a/cmds/installd/commands.c
++++ b/cmds/installd/commands.c
+@@ -21,6 +21,7 @@
+ 
+ /* Directory records that are used in execution of commands. */
+ dir_rec_t android_data_dir;
++dir_rec_t android_datadata_dir;
+ dir_rec_t android_asec_dir;
+ dir_rec_t android_app_dir;
+ dir_rec_t android_app_private_dir;
+diff --git a/cmds/installd/installd.c b/cmds/installd/installd.c
+index 1904408..76c3feb 100644
+--- a/cmds/installd/installd.c
++++ b/cmds/installd/installd.c
+@@ -268,6 +268,11 @@ int initialize_globals() {
+         return -1;
+     }
+ 
++    // Get the android datadata directory.
++    if (copy_and_append(&android_datadata_dir, &android_data_dir, DATA_SUBDIR) < 0) {
++        return -1;
++    }
++
+     // Get the android app directory.
+     if (copy_and_append(&android_app_dir, &android_data_dir, APP_SUBDIR) < 0) {
+         return -1;
+diff --git a/cmds/installd/installd.h b/cmds/installd/installd.h
+index 635b07c..1671038 100644
+--- a/cmds/installd/installd.h
++++ b/cmds/installd/installd.h
+@@ -60,6 +60,8 @@
+ 
+ #define CACHE_DIR_POSTFIX      "/cache"
+ 
++#define DATA_SUBDIR             "data/" // sub-directory under ANDROID_DATA
++
+ #define APP_SUBDIR             "app/" // sub-directory under ANDROID_DATA
+ 
+ #define APP_LIB_SUBDIR         "app-lib/" // sub-directory under ANDROID_DATA
+@@ -94,6 +96,7 @@ extern dir_rec_t android_app_dir;
+ extern dir_rec_t android_app_private_dir;
+ extern dir_rec_t android_app_lib_dir;
+ extern dir_rec_t android_data_dir;
++extern dir_rec_t android_datadata_dir;
+ extern dir_rec_t android_asec_dir;
+ extern dir_rec_t android_media_dir;
+ extern dir_rec_array_t android_system_dirs;
+diff --git a/cmds/installd/utils.c b/cmds/installd/utils.c
+index ef634c6..5bd769e 100644
+--- a/cmds/installd/utils.c
++++ b/cmds/installd/utils.c
+@@ -363,7 +363,7 @@ int lookup_media_dir(char basepath[PATH_MAX], const char *dir)
+ int64_t data_disk_free()
+ {
+     struct statfs sfs;
+-    if (statfs(android_data_dir.path, &sfs) == 0) {
++    if (statfs(android_datadata_dir.path, &sfs) == 0) {
+         return sfs.f_bavail * sfs.f_bsize;
+     } else {
+         ALOGE("Couldn't statfs %s: %s\n", android_data_dir.path, strerror(errno));
+diff --git a/cmds/servicemanager/service_manager.c b/cmds/servicemanager/service_manager.c
+index 3eaf1eb..3ccd401 100644
+--- a/cmds/servicemanager/service_manager.c
++++ b/cmds/servicemanager/service_manager.c
+@@ -32,6 +32,7 @@ static struct {
+     { AID_MEDIA, "media.player" },
+     { AID_MEDIA, "media.camera" },
+     { AID_MEDIA, "media.audio_policy" },
++    { AID_MEDIA, "media.nvidia.audio_alsa" },
+     { AID_DRM,   "drm.drmManager" },
+     { AID_NFC,   "nfc" },
+     { AID_BLUETOOTH, "bluetooth" },
+diff --git a/include/binder/IMemory.h b/include/binder/IMemory.h
+index 2d0db00..62ac9e3 100644
+--- a/include/binder/IMemory.h
++++ b/include/binder/IMemory.h
+@@ -36,7 +36,8 @@ public:
+ 
+     // flags returned by getFlags()
+     enum {
+-        READ_ONLY   = 0x00000001
++        READ_ONLY   = 0x00000001,
++        USE_ION_FD  = 0x00000008
+     };
+ 
+     virtual int         getHeapID() const = 0;
+diff --git a/include/binder/MemoryHeapBaseIon.h b/include/binder/MemoryHeapBaseIon.h
+new file mode 100644
+index 0000000..0fe99c7
+--- /dev/null
++++ b/include/binder/MemoryHeapBaseIon.h
+@@ -0,0 +1,51 @@
++/*
++ * Copyright (C) 2008 The Android Open Source Project
++ * Copyright 2011, Samsung Electronics Co. LTD
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++/*!
++ * \file MemoryHeapBaseIon.h
++ * \brief header file for MemoryHeapBaseIon
++ * \author MinGu, Jeon(mingu85.jeon)
++ * \date 2011/11/20
++ *
++ * <b>Revision History: </b>
++ * - 2011/11/21 : MinGu, Jeon(mingu85.jeon)) \n
++ * Initial version
++ */
++
++#ifndef ANDROID_MEMORY_HEAP_BASE_ION_H
++#define ANDROID_MEMORY_HEAP_BASE_ION_H
++
++#include <binder/IMemory.h>
++#include <binder/MemoryHeapBase.h>
++#include <stdlib.h>
++
++namespace android {
++
++class MemoryHeapBaseIon : public MemoryHeapBase
++{
++public:
++    enum {
++        USE_ION_FD = IMemoryHeap::USE_ION_FD
++    };
++    MemoryHeapBaseIon(size_t size, uint32_t flags = 0, char const* name = NULL);
++    MemoryHeapBaseIon(int fd, size_t size, uint32_t flags = 0, uint32_t offset = 0);
++    ~MemoryHeapBaseIon();
++private:
++    int mIonClient;
++};
++
++};
++#endif
+diff --git a/include/binder/MemoryHeapPmem.h b/include/binder/MemoryHeapPmem.h
+new file mode 100644
+index 0000000..e1660c4
+--- /dev/null
++++ b/include/binder/MemoryHeapPmem.h
+@@ -0,0 +1,79 @@
++/*
++ * Copyright (C) 2008 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef ANDROID_MEMORY_HEAP_PMEM_H
++#define ANDROID_MEMORY_HEAP_PMEM_H
++
++#include <stdlib.h>
++#include <stdint.h>
++
++#include <binder/MemoryHeapBase.h>
++#include <binder/IMemory.h>
++#include <utils/SortedVector.h>
++#include <utils/threads.h>
++
++namespace android {
++
++class MemoryHeapBase;
++
++// ---------------------------------------------------------------------------
++
++class MemoryHeapPmem : public MemoryHeapBase
++{
++public:
++    class MemoryPmem : public BnMemory {
++    public:
++        MemoryPmem(const sp<MemoryHeapPmem>& heap);
++        ~MemoryPmem();
++    protected:
++        const sp<MemoryHeapPmem>&  getHeap() const { return mClientHeap; }
++    private:
++        friend class MemoryHeapPmem;
++        virtual void revoke() = 0;
++        sp<MemoryHeapPmem>  mClientHeap;
++    };
++    
++    MemoryHeapPmem(const sp<MemoryHeapBase>& pmemHeap, uint32_t flags = 0);
++    ~MemoryHeapPmem();
++
++    /* HeapInterface additions */
++    virtual sp<IMemory> mapMemory(size_t offset, size_t size);
++
++    /* make the whole heap visible (you know who you are) */
++    virtual status_t slap();
++    
++    /* hide (revoke) the whole heap (the client will see the garbage page) */
++    virtual status_t unslap();
++    
++    /* revoke all allocations made by this heap */
++    virtual void revoke();
++
++private:
++    /* use this to create your own IMemory for mapMemory */
++    virtual sp<MemoryPmem> createMemory(size_t offset, size_t size);
++    void remove(const wp<MemoryPmem>& memory);
++
++private:
++    sp<MemoryHeapBase>              mParentHeap;
++    mutable Mutex                   mLock;
++    SortedVector< wp<MemoryPmem> >  mAllocations;
++};
++
++
++// ---------------------------------------------------------------------------
++}; // namespace android
++
++#endif // ANDROID_MEMORY_HEAP_PMEM_H
+diff --git a/include/gui/ISurfaceComposer.h b/include/gui/ISurfaceComposer.h
+index 5c3c99c..319aeaa 100644
+--- a/include/gui/ISurfaceComposer.h
++++ b/include/gui/ISurfaceComposer.h
+@@ -120,7 +120,8 @@ public:
+     virtual status_t captureScreen(const sp<IBinder>& display,
+             const sp<IGraphicBufferProducer>& producer,
+             uint32_t reqWidth, uint32_t reqHeight,
+-            uint32_t minLayerZ, uint32_t maxLayerZ) = 0;
++            uint32_t minLayerZ, uint32_t maxLayerZ,
++            bool isCpuConsumer) = 0;
+ };
+ 
+ // ----------------------------------------------------------------------------
+diff --git a/include/gui/SurfaceComposerClient.h b/include/gui/SurfaceComposerClient.h
+index e982bcd..d3e2ce0 100644
+--- a/include/gui/SurfaceComposerClient.h
++++ b/include/gui/SurfaceComposerClient.h
+@@ -73,6 +73,10 @@ public:
+ 
+     /* triggers screen on and waits for it to complete */
+     static void unblankDisplay(const sp<IBinder>& display);
++    static status_t getDisplayInfo(int32_t displayId, DisplayInfo* info);
++    static ssize_t getDisplayWidth(int32_t displayId);
++    static ssize_t getDisplayHeight(int32_t displayId);
++    static ssize_t getDisplayOrientation(int32_t displayId);
+ 
+     // ------------------------------------------------------------------------
+     // surface creation / destruction
+@@ -109,6 +113,8 @@ public:
+     //! Close a composer transaction on all active SurfaceComposerClients.
+     static void closeGlobalTransaction(bool synchronous = false);
+ 
++    static int setOrientation(int32_t dpy, int orientation, uint32_t flags);
++
+     //! Flag the currently open transaction as an animation transaction.
+     static void setAnimationTransaction();
+ 
+diff --git a/libs/binder/IPCThreadState.cpp b/libs/binder/IPCThreadState.cpp
+index 5951a3f..967215c 100644
+--- a/libs/binder/IPCThreadState.cpp
++++ b/libs/binder/IPCThreadState.cpp
+@@ -362,6 +362,14 @@ status_t IPCThreadState::clearLastError()
+     return err;
+ }
+ 
++extern "C" int _ZN7android14IPCThreadState13getCallingPidEv(IPCThreadState *state) {
++    return state->getCallingPid();
++}
++
++extern "C" int _ZN7android14IPCThreadState13getCallingUidEv(IPCThreadState *state) {
++    return state->getCallingUid();
++}
++
+ int IPCThreadState::getCallingPid() const
+ {
+     return mCallingPid;
+diff --git a/libs/binder/MemoryBase.cpp b/libs/binder/MemoryBase.cpp
+index 033066b..af868c9 100644
+--- a/libs/binder/MemoryBase.cpp
++++ b/libs/binder/MemoryBase.cpp
+@@ -14,6 +14,7 @@
+  * limitations under the License.
+  */
+ 
++#define LOG_TAG "MemoryBase"
+ 
+ #include <stdlib.h>
+ #include <stdint.h>
+@@ -44,3 +45,12 @@ MemoryBase::~MemoryBase()
+ 
+ // ---------------------------------------------------------------------------
+ }; // namespace android
++
++
++// Backwards compatibility for libdatabase_sqlcipher (http://b/8253769).
++extern "C" void _ZN7android10MemoryBaseC1ERKNS_2spINS_11IMemoryHeapEEEij(void*, void*, ssize_t, size_t);
++extern "C" void _ZN7android10MemoryBaseC1ERKNS_2spINS_11IMemoryHeapEEElj(void* obj, void* h, long o, unsigned int size) {
++    _ZN7android10MemoryBaseC1ERKNS_2spINS_11IMemoryHeapEEEij(obj, h, o, size);
++    ALOGW("Using temporary compatibility workaround for usage of MemoryBase "
++          "private API. Please fix your application!");
++}
+diff --git a/libs/binder/Parcel.cpp b/libs/binder/Parcel.cpp
+index db9e0a1..bb6856c 100644
+--- a/libs/binder/Parcel.cpp
++++ b/libs/binder/Parcel.cpp
+@@ -819,6 +819,12 @@ status_t Parcel::writeBlob(size_t len, WritableBlob* outBlob)
+     return status;
+ }
+ 
++extern "C" status_t _ZN7android6Parcel5writeERKNS0_26FlattenableHelperInterfaceE(void *parcel, void *val);
++
++extern "C" status_t _ZN7android6Parcel5writeERKNS_11FlattenableE(void *parcel, void *val) {
++    return _ZN7android6Parcel5writeERKNS0_26FlattenableHelperInterfaceE(parcel, val);
++}
++
+ status_t Parcel::write(const FlattenableHelperInterface& val)
+ {
+     status_t err;
+@@ -1197,6 +1203,12 @@ status_t Parcel::readBlob(size_t len, ReadableBlob* outBlob) const
+     return NO_ERROR;
+ }
+ 
++extern "C" status_t _ZNK7android6Parcel4readERNS0_26FlattenableHelperInterfaceE(void *parcel, void *val);
++
++extern "C" status_t _ZNK7android6Parcel4readERNS_11FlattenableE(void *parcel, void *val) {
++    return _ZNK7android6Parcel4readERNS0_26FlattenableHelperInterfaceE(parcel, val);
++}
++
+ status_t Parcel::read(FlattenableHelperInterface& val) const
+ {
+     // size
+diff --git a/libs/gui/IGraphicBufferProducer.cpp b/libs/gui/IGraphicBufferProducer.cpp
+index fc86e60..338b5ce 100644
+--- a/libs/gui/IGraphicBufferProducer.cpp
++++ b/libs/gui/IGraphicBufferProducer.cpp
+@@ -60,7 +60,11 @@ public:
+         bool nonNull = reply.readInt32();
+         if (nonNull) {
+             *buf = new GraphicBuffer();
+-            reply.read(**buf);
++            result = reply.read(**buf);
++            if(result != NO_ERROR) {
++                (*buf).clear();
++                return result;
++            }
+         }
+         result = reply.readInt32();
+         return result;
+@@ -112,7 +116,12 @@ public:
+         if (result != NO_ERROR) {
+             return result;
+         }
+-        memcpy(output, reply.readInplace(sizeof(*output)), sizeof(*output));
++        const void *out_data =reply.readInplace(sizeof(*output));
++        if(out_data != NULL) {
++            memcpy(output, out_data, sizeof(*output));
++        } else {
++            return BAD_VALUE;
++        }
+         result = reply.readInt32();
+         return result;
+     }
+@@ -149,7 +158,12 @@ public:
+         if (result != NO_ERROR) {
+             return result;
+         }
+-        memcpy(output, reply.readInplace(sizeof(*output)), sizeof(*output));
++        const void *out_data =reply.readInplace(sizeof(*output));
++        if(out_data != NULL) {
++            memcpy(output, out_data, sizeof(*output));
++        } else {
++            return BAD_VALUE;
++        }
+         result = reply.readInt32();
+         return result;
+     }
+diff --git a/libs/gui/ISurfaceComposer.cpp b/libs/gui/ISurfaceComposer.cpp
+index aab0604..6d22066 100644
+--- a/libs/gui/ISurfaceComposer.cpp
++++ b/libs/gui/ISurfaceComposer.cpp
+@@ -105,7 +105,8 @@ public:
+     virtual status_t captureScreen(const sp<IBinder>& display,
+             const sp<IGraphicBufferProducer>& producer,
+             uint32_t reqWidth, uint32_t reqHeight,
+-            uint32_t minLayerZ, uint32_t maxLayerZ)
++            uint32_t minLayerZ, uint32_t maxLayerZ,
++            bool isCpuConsumer)
+     {
+         Parcel data, reply;
+         data.writeInterfaceToken(ISurfaceComposer::getInterfaceDescriptor());
+@@ -115,6 +116,7 @@ public:
+         data.writeInt32(reqHeight);
+         data.writeInt32(minLayerZ);
+         data.writeInt32(maxLayerZ);
++        data.writeInt32(isCpuConsumer);
+         remote()->transact(BnSurfaceComposer::CAPTURE_SCREEN, data, &reply);
+         return reply.readInt32();
+     }
+@@ -285,8 +287,10 @@ status_t BnSurfaceComposer::onTransact(
+             uint32_t reqHeight = data.readInt32();
+             uint32_t minLayerZ = data.readInt32();
+             uint32_t maxLayerZ = data.readInt32();
++            bool isCpuConsumer = data.readInt32();
+             status_t res = captureScreen(display, producer,
+-                    reqWidth, reqHeight, minLayerZ, maxLayerZ);
++                    reqWidth, reqHeight, minLayerZ, maxLayerZ,
++                    isCpuConsumer);
+             reply->writeInt32(res);
+             return NO_ERROR;
+         }
+diff --git a/libs/gui/SensorEventQueue.cpp b/libs/gui/SensorEventQueue.cpp
+index c365671..5c19554 100644
+--- a/libs/gui/SensorEventQueue.cpp
++++ b/libs/gui/SensorEventQueue.cpp
+@@ -128,8 +128,9 @@ status_t SensorEventQueue::disableSensor(Sensor const* sensor) const {
+ 
+ status_t SensorEventQueue::enableSensor(int32_t handle, int32_t samplingPeriodUs,
+                                         int maxBatchReportLatencyUs, int reservedFlags) const {
+-    return mSensorEventConnection->enableDisable(handle, true, us2ns(samplingPeriodUs),
++    status_t err = mSensorEventConnection->enableDisable(handle, true, us2ns(samplingPeriodUs),
+                                                  us2ns(maxBatchReportLatencyUs), reservedFlags);
++    return err;
+ }
+ 
+ status_t SensorEventQueue::flush() const {
+diff --git a/libs/gui/Surface.cpp b/libs/gui/Surface.cpp
+index 27dbc4e..e611521 100644
+--- a/libs/gui/Surface.cpp
++++ b/libs/gui/Surface.cpp
+@@ -112,9 +112,12 @@ int Surface::hook_queueBuffer(ANativeWindow* window,
+ int Surface::hook_dequeueBuffer_DEPRECATED(ANativeWindow* window,
+         ANativeWindowBuffer** buffer) {
+     Surface* c = getSelf(window);
+-    ANativeWindowBuffer* buf;
++    ANativeWindowBuffer* buf = NULL;
+     int fenceFd = -1;
+     int result = c->dequeueBuffer(&buf, &fenceFd);
++
++    if (result != NO_ERROR) return result;
++
+     sp<Fence> fence(new Fence(fenceFd));
+     int waitResult = fence->waitForever("dequeueBuffer_DEPRECATED");
+     if (waitResult != OK) {
+@@ -205,10 +208,13 @@ int Surface::dequeueBuffer(android_native_buffer_t** buffer, int* fenceFd) {
+         if (result != NO_ERROR) {
+             ALOGE("dequeueBuffer: IGraphicBufferProducer::requestBuffer failed: %d", result);
+             return result;
++        } else if (gbuf == 0) {
++            ALOGE("dequeueBuffer: Buffer is null return");
++            return INVALID_OPERATION;
+         }
+     }
+ 
+-    if (fence->isValid()) {
++    if ((fence != NULL) && fence->isValid()) {
+         *fenceFd = fence->dup();
+         if (*fenceFd == -1) {
+             ALOGE("dequeueBuffer: error duping fence: %d", errno);
+@@ -311,12 +317,14 @@ int Surface::query(int what, int* value) const {
+                 }
+                 break;
+             case NATIVE_WINDOW_QUEUES_TO_WINDOW_COMPOSER: {
+-                sp<ISurfaceComposer> composer(
+-                        ComposerService::getComposerService());
+-                if (composer->authenticateSurfaceTexture(mGraphicBufferProducer)) {
+-                    *value = 1;
+-                } else {
+-                    *value = 0;
++                {
++                    sp<ISurfaceComposer> composer(
++                            ComposerService::getComposerService());
++                    if (composer->authenticateSurfaceTexture(mGraphicBufferProducer)) {
++                        *value = 1;
++                    } else {
++                        *value = 0;
++                    }
+                 }
+                 return NO_ERROR;
+             }
+diff --git a/libs/gui/SurfaceComposerClient.cpp b/libs/gui/SurfaceComposerClient.cpp
+index aafc4d2..bd41fac 100644
+--- a/libs/gui/SurfaceComposerClient.cpp
++++ b/libs/gui/SurfaceComposerClient.cpp
+@@ -421,6 +421,15 @@ void Composer::setDisplayProjection(const sp<IBinder>& token,
+     mForceSynchronous = true; // TODO: do we actually still need this?
+ }
+ 
++status_t Composer::setOrientation(int orientation) {
++    sp<ISurfaceComposer> sm(ComposerService::getComposerService());
++    sp<IBinder> token(sm->getBuiltInDisplay(ISurfaceComposer::eDisplayIdMain));
++    DisplayState& s(getDisplayStateLocked(token));
++    s.orientation = orientation;
++    mForceSynchronous = true; // TODO: do we actually still need this?
++    return NO_ERROR;
++}
++
+ // ---------------------------------------------------------------------------
+ 
+ SurfaceComposerClient::SurfaceComposerClient()
+@@ -469,6 +478,29 @@ void SurfaceComposerClient::dispose() {
+     mStatus = NO_INIT;
+ }
+ 
++extern "C" sp<SurfaceControl> _ZN7android21SurfaceComposerClient13createSurfaceERKNS_7String8Ejjij(
++        const String8& name,
++        uint32_t w,
++        uint32_t h,
++        PixelFormat format,
++        uint32_t flags);
++extern "C" sp<SurfaceControl> _ZN7android21SurfaceComposerClient13createSurfaceEijjij(
++        uint32_t display,
++        uint32_t w,
++        uint32_t h,
++        PixelFormat format,
++        uint32_t flags)
++{
++    String8 name;
++    const size_t SIZE = 128;
++    char buffer[SIZE];
++    snprintf(buffer, SIZE, "<pid_%d>", getpid());
++    name.append(buffer);
++
++    return _ZN7android21SurfaceComposerClient13createSurfaceERKNS_7String8Ejjij(name,
++            w, h, format, flags);
++}
++
+ sp<SurfaceControl> SurfaceComposerClient::createSurface(
+         const String8& name,
+         uint32_t w,
+@@ -581,6 +613,11 @@ status_t SurfaceComposerClient::setMatrix(const sp<IBinder>& id, float dsdx, flo
+     return getComposer().setMatrix(this, id, dsdx, dtdx, dsdy, dtdy);
+ }
+ 
++status_t SurfaceComposerClient::setOrientation(int32_t dpy, int orientation, uint32_t flags)
++{
++    return Composer::getInstance().setOrientation(orientation);
++}
++
+ // ----------------------------------------------------------------------------
+ 
+ void SurfaceComposerClient::setDisplaySurface(const sp<IBinder>& token,
+@@ -617,8 +654,41 @@ void SurfaceComposerClient::unblankDisplay(const sp<IBinder>& token) {
+     ComposerService::getComposerService()->unblank(token);
+ }
+ 
++ssize_t SurfaceComposerClient::getDisplayWidth(int32_t displayId) {
++    DisplayInfo info;
++    getDisplayInfo(getBuiltInDisplay(displayId), &info);
++    return info.w;
++}
++
++ssize_t SurfaceComposerClient::getDisplayHeight(int32_t displayId) {
++    DisplayInfo info;
++    getDisplayInfo(getBuiltInDisplay(displayId), &info);
++    return info.h;
++}
++
++ssize_t SurfaceComposerClient::getDisplayOrientation(int32_t displayId) {
++    DisplayInfo info;
++    getDisplayInfo(getBuiltInDisplay(displayId), &info);
++    return info.orientation;
++}
++
++// TODO: Remove me.  Do not use.
++// This is a compatibility shim for one product whose drivers are depending on
++// this legacy function (when they shouldn't).
++status_t SurfaceComposerClient::getDisplayInfo(
++        int32_t displayId, DisplayInfo* info)
++{
++    return getDisplayInfo(getBuiltInDisplay(displayId), info);
++}
++
+ // ----------------------------------------------------------------------------
+ 
++#ifndef FORCE_SCREENSHOT_CPU_PATH
++#define SS_CPU_CONSUMER false
++#else
++#define SS_CPU_CONSUMER true
++#endif
++
+ status_t ScreenshotClient::capture(
+         const sp<IBinder>& display,
+         const sp<IGraphicBufferProducer>& producer,
+@@ -627,7 +697,8 @@ status_t ScreenshotClient::capture(
+     sp<ISurfaceComposer> s(ComposerService::getComposerService());
+     if (s == NULL) return NO_INIT;
+     return s->captureScreen(display, producer,
+-            reqWidth, reqHeight, minLayerZ, maxLayerZ);
++            reqWidth, reqHeight, minLayerZ, maxLayerZ,
++            SS_CPU_CONSUMER);
+ }
+ 
+ ScreenshotClient::ScreenshotClient()
+@@ -662,7 +733,7 @@ status_t ScreenshotClient::update(const sp<IBinder>& display,
+     }
+ 
+     status_t err = s->captureScreen(display, mBufferQueue,
+-            reqWidth, reqHeight, minLayerZ, maxLayerZ);
++            reqWidth, reqHeight, minLayerZ, maxLayerZ, true);
+ 
+     if (err == NO_ERROR) {
+         err = mCpuConsumer->lockNextBuffer(&mBuffer);
+diff --git a/libs/gui/SurfaceControl.cpp b/libs/gui/SurfaceControl.cpp
+index 16e533c..d499f23 100644
+--- a/libs/gui/SurfaceControl.cpp
++++ b/libs/gui/SurfaceControl.cpp
+@@ -108,6 +108,10 @@ status_t SurfaceControl::setPosition(float x, float y) {
+     const sp<SurfaceComposerClient>& client(mClient);
+     return client->setPosition(mHandle, x, y);
+ }
++extern "C" int _ZN7android14SurfaceControl11setPositionEff(float x, float y);
++extern "C" int _ZN7android14SurfaceControl11setPositionEii(int32_t x, int32_t y) {
++    return _ZN7android14SurfaceControl11setPositionEff((float)x, (float)y);
++}
+ status_t SurfaceControl::setSize(uint32_t w, uint32_t h) {
+     status_t err = validate();
+     if (err < 0) return err;
+diff --git a/libs/ui/GraphicBuffer.cpp b/libs/ui/GraphicBuffer.cpp
+index 0ecd3d9..96a7188 100644
+--- a/libs/ui/GraphicBuffer.cpp
++++ b/libs/ui/GraphicBuffer.cpp
+@@ -282,6 +282,8 @@ status_t GraphicBuffer::unflatten(
+     if (handle != 0) {
+         status_t err = mBufferMapper.registerBuffer(handle);
+         if (err != NO_ERROR) {
++            width = height = stride = format = usage = 0;
++            handle = NULL;
+             ALOGE("unflatten: registerBuffer failed: %s (%d)",
+                     strerror(-err), err);
+             return err;
+diff --git a/opengl/libs/GLES2/gl2.cpp b/opengl/libs/GLES2/gl2.cpp
+index 3134e56..0e929e8 100644
+--- a/opengl/libs/GLES2/gl2.cpp
++++ b/opengl/libs/GLES2/gl2.cpp
+@@ -127,7 +127,7 @@ const GLubyte * glGetString(GLenum name)
+     const GLubyte * ret = egl_get_string_for_current_context(name);
+     if (ret == NULL) {
+         gl_hooks_t::gl_t const * const _c = &getGlThreadSpecific()->gl;
+-        ret = _c->glGetString(name);
++        if(_c) ret = _c->glGetString(name);
+     }
+     return ret;
+ }
+diff --git a/services/sensorservice/Android.mk b/services/sensorservice/Android.mk
+index 4f24ddc..c1a64e5 100644
+--- a/services/sensorservice/Android.mk
++++ b/services/sensorservice/Android.mk
+@@ -9,6 +9,7 @@ LOCAL_SRC_FILES:= \
+     LinearAccelerationSensor.cpp \
+     OrientationSensor.cpp \
+     RotationVectorSensor.cpp \
++    RotationVectorSensor2.cpp \
+     SensorDevice.cpp \
+     SensorFusion.cpp \
+     SensorInterface.cpp \
+diff --git a/services/sensorservice/RotationVectorSensor2.cpp b/services/sensorservice/RotationVectorSensor2.cpp
+new file mode 100644
+index 0000000..7eb5413
+--- /dev/null
++++ b/services/sensorservice/RotationVectorSensor2.cpp
+@@ -0,0 +1,125 @@
++/*
++ * Copyright (C) 2010 The Android Open Source Project
++ * Copyright (C) 2012 The CyanogenMod Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include <stdint.h>
++#include <math.h>
++#include <sys/types.h>
++
++#include <utils/Errors.h>
++
++#include <hardware/sensors.h>
++
++#include "RotationVectorSensor2.h"
++#include "vec.h"
++
++namespace android {
++// ---------------------------------------------------------------------------
++
++ANDROID_SINGLETON_STATIC_INSTANCE(RotationVectorSensor2)
++
++RotationVectorSensor2::RotationVectorSensor2()
++    : mSensorDevice(SensorDevice::getInstance()),
++      mEnabled(false), mHasData(false)
++{
++    sensor_t const* list;
++    ssize_t count = mSensorDevice.getSensorList(&list);
++    if (count > 0) {
++        for (size_t i=0 ; i<size_t(count) ; i++) {
++            if (list[i].type == SENSOR_TYPE_ORIENTATION) {
++                mOrientation = Sensor(list + i);
++            }
++        }
++    }
++}
++
++bool RotationVectorSensor2::process(sensors_event_t* outEvent,
++        const sensors_event_t& event)
++{
++    if (mHasData && event.type == SENSOR_TYPE_ACCELEROMETER) {
++        *outEvent = event;
++        outEvent->data[0] = mData[1];
++        outEvent->data[1] = mData[2];
++        outEvent->data[2] = mData[3];
++        outEvent->data[3] = mData[0];
++        outEvent->sensor = '_rv2';
++        outEvent->type = SENSOR_TYPE_ROTATION_VECTOR;
++
++        mHasData = false;
++        return true;
++    }
++    return false;
++}
++
++status_t RotationVectorSensor2::activate(void* ident, bool enabled) {
++    mEnabled = enabled;
++    return mSensorDevice.activate(this, mOrientation.getHandle(), enabled);
++}
++
++status_t RotationVectorSensor2::setDelay(void* ident, int handle, int64_t ns) {
++    return mSensorDevice.setDelay(this, mOrientation.getHandle(), ns);
++}
++
++Sensor RotationVectorSensor2::getSensor() const {
++    sensor_t hwSensor;
++    hwSensor.name       = "Rotation Vector Sensor 2";
++    hwSensor.vendor     = "CyanogenMod Project";
++    hwSensor.version    = 1;
++    hwSensor.handle     = '_rv2';
++    hwSensor.type       = SENSOR_TYPE_ROTATION_VECTOR;
++    hwSensor.maxRange   = 1;
++    hwSensor.resolution = 1.0f / (1<<24);
++    hwSensor.power      = mOrientation.getPowerUsage();
++    hwSensor.minDelay   = mOrientation.getMinDelay();
++    Sensor sensor(&hwSensor);
++    return sensor;
++}
++
++void RotationVectorSensor2::process(const sensors_event_t& event) {
++    if (event.type == SENSOR_TYPE_ORIENTATION) {
++        const vec3_t v(event.data);
++
++        // Convert euler angle to quarternion
++        const float deg2rad = M_PI / 180;
++        float halfAzi = (v[0] / 2) * deg2rad;
++        float halfPitch = (v[1] / 2) * deg2rad;
++        float halfRoll = (-v[2] / 2) * deg2rad; // roll is reverse
++
++        float c1 = cosf(halfAzi);
++        float s1 = sinf(halfAzi);
++        float c2 = cosf(halfPitch);
++        float s2 = sinf(halfPitch);
++        float c3 = cosf(halfRoll);
++        float s3 = sinf(halfRoll);
++        mData[0] = c1*c2*c3 - s1*s2*s3;
++        mData[1] = c1*s2*c3 - s1*c2*s3;
++        mData[2] = c1*c2*s3 + s1*s2*c3;
++        mData[3] = s1*c2*c3 + c1*s2*s3;
++
++        // Misc fixes (a.k.a. "magic")
++        if (v[0] < 180) {
++            mData[1] = -mData[1];
++            mData[3] = -mData[3];
++        } else {
++            mData[2] = -mData[2];
++        }
++
++        mHasData = true;
++    }
++}
++
++// ---------------------------------------------------------------------------
++}; // namespace android
+diff --git a/services/sensorservice/RotationVectorSensor2.h b/services/sensorservice/RotationVectorSensor2.h
+new file mode 100644
+index 0000000..872ec12
+--- /dev/null
++++ b/services/sensorservice/RotationVectorSensor2.h
+@@ -0,0 +1,63 @@
++/*
++ * Copyright (C) 2010 The Android Open Source Project
++ * Copyright (C) 2012 The CyanogenMod Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef ANDROID_ROTATION_VECTOR_SENSOR2_H
++#define ANDROID_ROTATION_VECTOR_SENSOR2_H
++
++#include <stdint.h>
++#include <sys/types.h>
++
++#include <gui/Sensor.h>
++
++#include "SensorDevice.h"
++#include "SensorInterface.h"
++
++#include "quat.h"
++
++// ---------------------------------------------------------------------------
++namespace android {
++// ---------------------------------------------------------------------------
++
++class RotationVectorSensor2 : public SensorInterface,
++                              public Singleton<RotationVectorSensor2> {
++    friend class Singleton<RotationVectorSensor2>;
++
++    SensorDevice& mSensorDevice;
++
++    Sensor mOrientation;
++    bool mEnabled;
++    bool mHasData;
++    quat_t mData;
++
++public:
++    RotationVectorSensor2();
++    virtual bool process(sensors_event_t* outEvent,
++            const sensors_event_t& event);
++    virtual status_t activate(void* ident, bool enabled);
++    virtual status_t setDelay(void* ident, int handle, int64_t ns);
++    virtual Sensor getSensor() const;
++    virtual bool isVirtual() const { return true; }
++    bool isEnabled() const { return mEnabled; }
++
++    // Incoming data
++    void process(const sensors_event_t& event);
++};
++
++// ---------------------------------------------------------------------------
++}; // namespace android
++
++#endif // ANDROID_ROTATION_VECTOR2_SENSOR_H
+diff --git a/services/sensorservice/SensorService.cpp b/services/sensorservice/SensorService.cpp
+index f6705f6..af1b61c 100644
+--- a/services/sensorservice/SensorService.cpp
++++ b/services/sensorservice/SensorService.cpp
+@@ -46,6 +46,7 @@
+ #include "LinearAccelerationSensor.h"
+ #include "OrientationSensor.h"
+ #include "RotationVectorSensor.h"
++#include "RotationVectorSensor2.h"
+ #include "SensorFusion.h"
+ #include "SensorService.h"
+ 
+@@ -143,6 +144,12 @@ void SensorService::onFirstRef()
+                 // virtual debugging sensors are not added to mUserSensorList
+                 registerVirtualSensor( new CorrectedGyroSensor(list, count) );
+                 registerVirtualSensor( new GyroDriftSensor() );
++            } else if (orientationIndex != -1) {
++                // If we don't have a gyro but have a orientation sensor from
++                // elsewhere, we can compute rotation vector from that.
++                // (Google Maps expects rotation vector sensor to exist.)
++
++                registerVirtualSensor( &RotationVectorSensor2::getInstance() );
+             }
+ 
+             // debugging sensor list
+@@ -365,6 +372,12 @@ bool SensorService::threadLoop()
+                         fusion.process(event[i]);
+                     }
+                 }
++                RotationVectorSensor2& rv2(RotationVectorSensor2::getInstance());
++                if (rv2.isEnabled()) {
++                    for (size_t i=0 ; i<size_t(count) ; i++) {
++                        rv2.process(event[i]);
++                    }
++                }
+                 for (size_t i=0 ; i<size_t(count) && k<minBufferSize ; i++) {
+                     for (size_t j=0 ; j<activeVirtualSensorCount ; j++) {
+                         if (count + k >= minBufferSize) {
+@@ -596,12 +609,18 @@ status_t SensorService::enable(const sp<SensorEventConnection>& connection,
+     status_t err = sensor->batch(connection.get(), handle, reservedFlags, samplingPeriodNs,
+                                  maxBatchReportLatencyNs);
+     if (err == NO_ERROR) {
+-        connection->setFirstFlushPending(handle, true);
+-        status_t err_flush = sensor->flush(connection.get(), handle);
+-        // Flush may return error if the sensor is not activated or the underlying h/w sensor does
+-        // not support flush.
+-        if (err_flush != NO_ERROR) {
+-            connection->setFirstFlushPending(handle, false);
++        const SensorDevice& device(SensorDevice::getInstance());
++        if (device.getHalDeviceVersion() >= SENSORS_DEVICE_API_VERSION_1_1) {
++            connection->setFirstFlushPending(handle, true);
++            status_t err_flush = sensor->flush(connection.get(), handle);
++            // Flush may return error if the sensor is not activated or the underlying h/w sensor does
++            // not support flush.
++            if (err_flush != NO_ERROR) {
++                connection->setFirstFlushPending(handle, false);
++            }
++        } else {
++            // Pre-1.1 sensor HALs had no flush method, and relied on setDelay at init
++            sensor->setDelay(connection.get(), handle, samplingPeriodNs);
+         }
+     }
+ 
+diff --git a/services/surfaceflinger/Android.mk b/services/surfaceflinger/Android.mk
+index b2bc550..afa680f 100644
+--- a/services/surfaceflinger/Android.mk
++++ b/services/surfaceflinger/Android.mk
+@@ -37,9 +37,6 @@ LOCAL_SRC_FILES:= \
+ LOCAL_CFLAGS:= -DLOG_TAG=\"SurfaceFlinger\"
+ LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES -DEGL_EGLEXT_PROTOTYPES
+ 
+-ifeq ($(TARGET_BOARD_PLATFORM),omap3)
+-	LOCAL_CFLAGS += -DNO_RGBX_8888
+-endif
+ ifeq ($(TARGET_BOARD_PLATFORM),omap4)
+ 	LOCAL_CFLAGS += -DHAS_CONTEXT_PRIORITY
+ endif
+diff --git a/services/surfaceflinger/DisplayDevice.cpp b/services/surfaceflinger/DisplayDevice.cpp
+index 800137b..f56a1c5 100644
+--- a/services/surfaceflinger/DisplayDevice.cpp
++++ b/services/surfaceflinger/DisplayDevice.cpp
+@@ -71,6 +71,7 @@ DisplayDevice::DisplayDevice(
+       mSecureLayerVisible(false),
+       mScreenAcquired(false),
+       mLayerStack(NO_LAYER_STACK),
++      mHardwareOrientation(0),
+       mOrientation()
+ {
+     mNativeWindow = new Surface(producer, false);
+@@ -114,7 +115,12 @@ DisplayDevice::DisplayDevice(
+     // was created with createDisplay().
+     switch (mType) {
+         case DISPLAY_PRIMARY:
++            char value[PROPERTY_VALUE_MAX];
+             mDisplayName = "Built-in Screen";
++
++            /* hwrotation applies only to the primary display */
++            property_get("ro.sf.hwrotation", value, "0");
++            mHardwareOrientation = atoi(value);
+             break;
+         case DISPLAY_EXTERNAL:
+             mDisplayName = "HDMI Screen";
+@@ -367,6 +373,18 @@ status_t DisplayDevice::orientationToTransfrom(
+         int orientation, int w, int h, Transform* tr)
+ {
+     uint32_t flags = 0;
++    int additionalRot = this->getHardwareOrientation();
++
++    if (additionalRot) {
++        additionalRot /= 90;
++        if (orientation == DisplayState::eOrientationUnchanged) {
++            orientation = additionalRot;
++        } else {
++            orientation += additionalRot;
++            orientation %= 4;
++        }
++    }
++
+     switch (orientation) {
+     case DisplayState::eOrientationDefault:
+         flags = Transform::ROT_0;
+@@ -383,6 +401,7 @@ status_t DisplayDevice::orientationToTransfrom(
+     default:
+         return BAD_VALUE;
+     }
++
+     tr->set(flags, w, h);
+     return NO_ERROR;
+ }
+@@ -401,7 +420,11 @@ void DisplayDevice::setProjection(int orientation,
+     if (!frame.isValid()) {
+         // the destination frame can be invalid if it has never been set,
+         // in that case we assume the whole display frame.
+-        frame = Rect(w, h);
++        if ((mHardwareOrientation/90) & DisplayState::eOrientationSwapMask) {
++            frame = Rect(h, w);
++        } else {
++            frame = Rect(w, h);
++        }
+     }
+ 
+     if (viewport.isEmpty()) {
+@@ -456,6 +479,10 @@ void DisplayDevice::setProjection(int orientation,
+     mFrame = frame;
+ }
+ 
++int DisplayDevice::getHardwareOrientation() {
++    return mHardwareOrientation;
++}
++
+ void DisplayDevice::dump(String8& result) const {
+     const Transform& tr(mGlobalTransform);
+     result.appendFormat(
+diff --git a/services/surfaceflinger/DisplayDevice.h b/services/surfaceflinger/DisplayDevice.h
+index c3abe89..24ca033 100644
+--- a/services/surfaceflinger/DisplayDevice.h
++++ b/services/surfaceflinger/DisplayDevice.h
+@@ -159,6 +159,7 @@ public:
+      */
+     uint32_t getPageFlipCount() const;
+     void dump(String8& result) const;
++    int getHardwareOrientation();
+ 
+ private:
+     /*
+@@ -201,10 +202,11 @@ private:
+     /*
+      * Transaction state
+      */
+-    static status_t orientationToTransfrom(int orientation,
++    status_t orientationToTransfrom(int orientation,
+             int w, int h, Transform* tr);
+ 
+     uint32_t mLayerStack;
++    int mHardwareOrientation;
+     int mOrientation;
+     // user-provided visible area of the layer stack
+     Rect mViewport;
+diff --git a/services/surfaceflinger/DisplayHardware/HWComposer.cpp b/services/surfaceflinger/DisplayHardware/HWComposer.cpp
+index c7d1a90..54ca673 100644
+--- a/services/surfaceflinger/DisplayHardware/HWComposer.cpp
++++ b/services/surfaceflinger/DisplayHardware/HWComposer.cpp
+@@ -395,8 +395,7 @@ status_t HWComposer::queryDisplayProperties(int disp) {
+ 
+ status_t HWComposer::setVirtualDisplayProperties(int32_t id,
+         uint32_t w, uint32_t h, uint32_t format) {
+-    if (id < VIRTUAL_DISPLAY_ID_BASE || id >= int32_t(mNumDisplays) ||
+-            !mAllocatedDisplayIDs.hasBit(id)) {
++    if (id >= int32_t(mNumDisplays) || !mAllocatedDisplayIDs.hasBit(id)) {
+         return BAD_INDEX;
+     }
+     mDisplayData[id].width = w;
+@@ -476,38 +475,46 @@ void HWComposer::eventControl(int disp, int event, int enabled) {
+               event, disp, enabled);
+         return;
+     }
+-    if (event != EVENT_VSYNC) {
+-        ALOGW("eventControl got unexpected event %d (disp=%d en=%d)",
+-              event, disp, enabled);
+-        return;
+-    }
+     status_t err = NO_ERROR;
+-    if (mHwc && !mDebugForceFakeVSync) {
+-        // NOTE: we use our own internal lock here because we have to call
+-        // into the HWC with the lock held, and we want to make sure
+-        // that even if HWC blocks (which it shouldn't), it won't
+-        // affect other threads.
+-        Mutex::Autolock _l(mEventControlLock);
+-        const int32_t eventBit = 1UL << event;
+-        const int32_t newValue = enabled ? eventBit : 0;
+-        const int32_t oldValue = mDisplayData[disp].events & eventBit;
+-        if (newValue != oldValue) {
+-            ATRACE_CALL();
+-            err = mHwc->eventControl(mHwc, disp, event, enabled);
+-            if (!err) {
+-                int32_t& events(mDisplayData[disp].events);
+-                events = (events & ~eventBit) | newValue;
+-            }
++    switch(event) {
++        case EVENT_VSYNC:
++            if (mHwc && !mDebugForceFakeVSync) {
++                // NOTE: we use our own internal lock here because we have to
++                // call into the HWC with the lock held, and we want to make
++                // sure that even if HWC blocks (which it shouldn't), it won't
++                // affect other threads.
++                Mutex::Autolock _l(mEventControlLock);
++                const int32_t eventBit = 1UL << event;
++                const int32_t newValue = enabled ? eventBit : 0;
++                const int32_t oldValue = mDisplayData[disp].events & eventBit;
++                if (newValue != oldValue) {
++                    ATRACE_CALL();
++                    err = mHwc->eventControl(mHwc, disp, event, enabled);
++                    if (!err) {
++                        int32_t& events(mDisplayData[disp].events);
++                        events = (events & ~eventBit) | newValue;
++                    }
++                }
++                // error here should not happen -- not sure what we should
++                // do if it does.
++                ALOGE_IF(err, "eventControl(%d, %d) failed %s",
++                         event, enabled, strerror(-err));
+         }
+-        // error here should not happen -- not sure what we should
+-        // do if it does.
+-        ALOGE_IF(err, "eventControl(%d, %d) failed %s",
+-                event, enabled, strerror(-err));
+-    }
+-
+-    if (err == NO_ERROR && mVSyncThread != NULL) {
+-        mVSyncThread->setEnabled(enabled);
++            if (err == NO_ERROR && mVSyncThread != NULL) {
++                mVSyncThread->setEnabled(enabled);
++            }
++            break;
++        case EVENT_ORIENTATION:
++            // Orientation event
++            if (hwcHasApiVersion(mHwc, HWC_DEVICE_API_VERSION_1_0))
++              err = mHwc->eventControl(mHwc, disp, event, enabled);
++            break;
++        default:
++            ALOGW("eventControl got unexpected event %d (disp=%d en=%d)",
++                    event, disp, enabled);
++            break;
+     }
++    return;
+ }
+ 
+ status_t HWComposer::createWorkList(int32_t id, size_t numLayers) {
+@@ -622,25 +629,25 @@ status_t HWComposer::prepare() {
+     ALOGE_IF(err, "HWComposer: prepare failed (%s)", strerror(-err));
+ 
+     if (err == NO_ERROR) {
+-        // here we're just making sure that "skip" layers are set
+-        // to HWC_FRAMEBUFFER and we're also counting how many layers
+-        // we have of each type.
+-        //
+-        // If there are no window layers, we treat the display has having FB
+-        // composition, because SurfaceFlinger will use GLES to draw the
+-        // wormhole region.
+-        for (size_t i=0 ; i<mNumDisplays ; i++) {
+-            DisplayData& disp(mDisplayData[i]);
+-            disp.hasFbComp = false;
+-            disp.hasOvComp = false;
+-            if (disp.list) {
+-                for (size_t i=0 ; i<disp.list->numHwLayers ; i++) {
++            // here we're just making sure that "skip" layers are set
++            // to HWC_FRAMEBUFFER and we're also counting how many layers
++            // we have of each type.
++            //
++            // If there are no window layers, we treat the display has having FB
++            // composition, because SurfaceFlinger will use GLES to draw the
++            // wormhole region.
++            for (size_t i=0 ; i<mNumDisplays ; i++) {
++                DisplayData& disp(mDisplayData[i]);
++                disp.hasFbComp = false;
++                disp.hasOvComp = false;
++                if (disp.list) {
++                    for (size_t i=0 ; i<disp.list->numHwLayers ; i++) {
+                     hwc_layer_1_t& l = disp.list->hwLayers[i];
+ 
+                     //ALOGD("prepare: %d, type=%d, handle=%p",
+                     //        i, l.compositionType, l.handle);
+-
+-                    if (l.flags & HWC_SKIP_LAYER) {
++                    if ((i == DisplayDevice::DISPLAY_PRIMARY) &&
++                                l.flags & HWC_SKIP_LAYER) {
+                         l.compositionType = HWC_FRAMEBUFFER;
+                     }
+                     if (l.compositionType == HWC_FRAMEBUFFER) {
+@@ -904,6 +911,13 @@ public:
+             getLayer()->flags &= ~HWC_SKIP_LAYER;
+         }
+     }
++    virtual void setAnimating(bool animating) {
++        if (animating) {
++            getLayer()->flags |= HWC_SCREENSHOT_ANIMATOR_LAYER;
++        } else {
++            getLayer()->flags &= ~HWC_SCREENSHOT_ANIMATOR_LAYER;
++        }
++    }
+     virtual void setBlending(uint32_t blending) {
+         getLayer()->blending = blending;
+     }
+diff --git a/services/surfaceflinger/DisplayHardware/HWComposer.h b/services/surfaceflinger/DisplayHardware/HWComposer.h
+index 9f96113..7288843 100644
+--- a/services/surfaceflinger/DisplayHardware/HWComposer.h
++++ b/services/surfaceflinger/DisplayHardware/HWComposer.h
+@@ -240,7 +240,8 @@ public:
+     // Events handling ---------------------------------------------------------
+ 
+     enum {
+-        EVENT_VSYNC = HWC_EVENT_VSYNC
++        EVENT_VSYNC = HWC_EVENT_VSYNC,
++        EVENT_ORIENTATION = HWC_EVENT_ORIENTATION
+     };
+ 
+     void eventControl(int disp, int event, int enabled);
+diff --git a/services/surfaceflinger/Layer.cpp b/services/surfaceflinger/Layer.cpp
+index 61af51f..71abc24 100644
+--- a/services/surfaceflinger/Layer.cpp
++++ b/services/surfaceflinger/Layer.cpp
+@@ -490,11 +490,13 @@ void Layer::onDraw(const sp<const DisplayDevice>& hw, const Region& clip) const
+         // is probably going to have something visibly wrong.
+     }
+ 
++    bool canAllowGPU = false;
++
+     bool blackOutLayer = isProtected() || (isSecure() && !hw->isSecure());
+ 
+     RenderEngine& engine(mFlinger->getRenderEngine());
+ 
+-    if (!blackOutLayer) {
++    if (!blackOutLayer || (canAllowGPU)) {
+         // TODO: we could be more subtle with isFixedSize()
+         const bool useFiltering = getFiltering() || needsFiltering(hw) || isFixedSize();
+ 
+diff --git a/services/surfaceflinger/RenderEngine/GLES11RenderEngine.cpp b/services/surfaceflinger/RenderEngine/GLES11RenderEngine.cpp
+index 521a5d2..da69965 100644
+--- a/services/surfaceflinger/RenderEngine/GLES11RenderEngine.cpp
++++ b/services/surfaceflinger/RenderEngine/GLES11RenderEngine.cpp
+@@ -185,28 +185,45 @@ void GLES11RenderEngine::disableBlending() {
+ }
+ 
+ void GLES11RenderEngine::bindImageAsFramebuffer(EGLImageKHR image,
+-        uint32_t* texName, uint32_t* fbName, uint32_t* status) {
++        uint32_t* texName, uint32_t* fbName, uint32_t* status,
++        bool useReadPixels, int reqWidth, int reqHeight) {
+     GLuint tname, name;
+-    // turn our EGLImage into a texture
+-    glGenTextures(1, &tname);
+-    glBindTexture(GL_TEXTURE_2D, tname);
+-    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES)image);
+-
+-    // create a Framebuffer Object to render into
+-    glGenFramebuffersOES(1, &name);
+-    glBindFramebufferOES(GL_FRAMEBUFFER_OES, name);
+-    glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES,
+-            GL_COLOR_ATTACHMENT0_OES, GL_TEXTURE_2D, tname, 0);
++    if (!useReadPixels) {
++        // turn our EGLImage into a texture
++        glGenTextures(1, &tname);
++        glBindTexture(GL_TEXTURE_2D, tname);
++        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES)image);
++
++        // create a Framebuffer Object to render into
++        glGenFramebuffersOES(1, &name);
++        glBindFramebufferOES(GL_FRAMEBUFFER_OES, name);
++        glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES,
++                GL_COLOR_ATTACHMENT0_OES, GL_TEXTURE_2D, tname, 0);
++    } else {
++        // since we're going to use glReadPixels() anyways,
++        // use an intermediate renderbuffer instead
++        glGenRenderbuffersOES(1, &tname);
++        glBindRenderbufferOES(GL_RENDERBUFFER_OES, tname);
++        glRenderbufferStorageOES(GL_RENDERBUFFER_OES, GL_RGBA8_OES, reqWidth, reqHeight);
++        // create a FBO to render into
++        glGenFramebuffersOES(1, &name);
++        glBindFramebufferOES(GL_FRAMEBUFFER_OES, name);
++        glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, tname);
++    }
+ 
+     *status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES);
+     *texName = tname;
+     *fbName = name;
+ }
+ 
+-void GLES11RenderEngine::unbindFramebuffer(uint32_t texName, uint32_t fbName) {
++void GLES11RenderEngine::unbindFramebuffer(uint32_t texName, uint32_t fbName,
++        bool useReadPixels) {
+     glBindFramebufferOES(GL_FRAMEBUFFER_OES, 0);
+     glDeleteFramebuffersOES(1, &fbName);
+-    glDeleteTextures(1, &texName);
++    if (!useReadPixels)
++        glDeleteTextures(1, &texName);
++    else
++        glDeleteRenderbuffersOES(1, &texName);
+ }
+ 
+ void GLES11RenderEngine::setupFillWithColor(float r, float g, float b, float a) {
+diff --git a/services/surfaceflinger/RenderEngine/GLES11RenderEngine.h b/services/surfaceflinger/RenderEngine/GLES11RenderEngine.h
+index cd53aab..6e4c46e 100644
+--- a/services/surfaceflinger/RenderEngine/GLES11RenderEngine.h
++++ b/services/surfaceflinger/RenderEngine/GLES11RenderEngine.h
+@@ -39,8 +39,8 @@ class GLES11RenderEngine : public RenderEngine {
+     GLint mMaxTextureSize;
+ 
+     virtual void bindImageAsFramebuffer(EGLImageKHR image,
+-            uint32_t* texName, uint32_t* fbName, uint32_t* status);
+-    virtual void unbindFramebuffer(uint32_t texName, uint32_t fbName);
++            uint32_t* texName, uint32_t* fbName, uint32_t* status, bool useReadPixels, int reqWidth, int reqHeight);
++    virtual void unbindFramebuffer(uint32_t texName, uint32_t fbName, bool useReadPixels);
+ 
+ public:
+     GLES11RenderEngine();
+diff --git a/services/surfaceflinger/RenderEngine/GLES20RenderEngine.cpp b/services/surfaceflinger/RenderEngine/GLES20RenderEngine.cpp
+index a2a6270..ada3ab0 100644
+--- a/services/surfaceflinger/RenderEngine/GLES20RenderEngine.cpp
++++ b/services/surfaceflinger/RenderEngine/GLES20RenderEngine.cpp
+@@ -151,27 +151,44 @@ void GLES20RenderEngine::disableBlending() {
+ 
+ 
+ void GLES20RenderEngine::bindImageAsFramebuffer(EGLImageKHR image,
+-        uint32_t* texName, uint32_t* fbName, uint32_t* status) {
++        uint32_t* texName, uint32_t* fbName, uint32_t* status,
++        bool useReadPixels, int reqWidth, int reqHeight) {
+     GLuint tname, name;
+-    // turn our EGLImage into a texture
+-    glGenTextures(1, &tname);
+-    glBindTexture(GL_TEXTURE_2D, tname);
+-    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES)image);
+-
+-    // create a Framebuffer Object to render into
+-    glGenFramebuffers(1, &name);
+-    glBindFramebuffer(GL_FRAMEBUFFER, name);
+-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tname, 0);
++    if (!useReadPixels) {
++        // turn our EGLImage into a texture
++        glGenTextures(1, &tname);
++        glBindTexture(GL_TEXTURE_2D, tname);
++        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES)image);
++
++        // create a Framebuffer Object to render into
++        glGenFramebuffers(1, &name);
++        glBindFramebuffer(GL_FRAMEBUFFER, name);
++        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tname, 0);
++    } else {
++        // since we're going to use glReadPixels() anyways,
++        // use an intermediate renderbuffer instead
++        glGenRenderbuffers(1, &tname);
++        glBindRenderbuffer(GL_RENDERBUFFER, tname);
++        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8_OES, reqWidth, reqHeight);
++        // create a FBO to render into
++        glGenFramebuffers(1, &name);
++        glBindFramebuffer(GL_FRAMEBUFFER, name);
++        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, tname);
++    }
+ 
+     *status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+     *texName = tname;
+     *fbName = name;
+ }
+ 
+-void GLES20RenderEngine::unbindFramebuffer(uint32_t texName, uint32_t fbName) {
++void GLES20RenderEngine::unbindFramebuffer(uint32_t texName, uint32_t fbName,
++        bool useReadPixels) {
+     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+     glDeleteFramebuffers(1, &fbName);
+-    glDeleteTextures(1, &texName);
++    if (!useReadPixels)
++        glDeleteTextures(1, &texName);
++    else
++        glDeleteRenderbuffers(1, &texName);
+ }
+ 
+ void GLES20RenderEngine::setupFillWithColor(float r, float g, float b, float a) {
+diff --git a/services/surfaceflinger/RenderEngine/GLES20RenderEngine.h b/services/surfaceflinger/RenderEngine/GLES20RenderEngine.h
+index 8b67fcc..d5c5b5d 100644
+--- a/services/surfaceflinger/RenderEngine/GLES20RenderEngine.h
++++ b/services/surfaceflinger/RenderEngine/GLES20RenderEngine.h
+@@ -54,8 +54,9 @@ class GLES20RenderEngine : public RenderEngine {
+     Vector<Group> mGroupStack;
+ 
+     virtual void bindImageAsFramebuffer(EGLImageKHR image,
+-            uint32_t* texName, uint32_t* fbName, uint32_t* status);
+-    virtual void unbindFramebuffer(uint32_t texName, uint32_t fbName);
++            uint32_t* texName, uint32_t* fbName, uint32_t* status,
++            bool useReadPixels, int reqWidth, int reqHeight);
++    virtual void unbindFramebuffer(uint32_t texName, uint32_t fbName, bool useReadPixels);
+ 
+ public:
+     GLES20RenderEngine();
+diff --git a/services/surfaceflinger/RenderEngine/RenderEngine.cpp b/services/surfaceflinger/RenderEngine/RenderEngine.cpp
+index ba82cad..8a8ee56 100644
+--- a/services/surfaceflinger/RenderEngine/RenderEngine.cpp
++++ b/services/surfaceflinger/RenderEngine/RenderEngine.cpp
+@@ -217,9 +217,11 @@ void RenderEngine::dump(String8& result) {
+ // ---------------------------------------------------------------------------
+ 
+ RenderEngine::BindImageAsFramebuffer::BindImageAsFramebuffer(
+-        RenderEngine& engine, EGLImageKHR image) : mEngine(engine)
++        RenderEngine& engine, EGLImageKHR image, bool useReadPixels,
++        int reqWidth, int reqHeight) : mEngine(engine), mUseReadPixels(useReadPixels)
+ {
+-    mEngine.bindImageAsFramebuffer(image, &mTexName, &mFbName, &mStatus);
++    mEngine.bindImageAsFramebuffer(image, &mTexName, &mFbName, &mStatus,
++            useReadPixels, reqWidth, reqHeight);
+ 
+     ALOGE_IF(mStatus != GL_FRAMEBUFFER_COMPLETE_OES,
+             "glCheckFramebufferStatusOES error %d", mStatus);
+@@ -227,7 +229,7 @@ RenderEngine::BindImageAsFramebuffer::BindImageAsFramebuffer(
+ 
+ RenderEngine::BindImageAsFramebuffer::~BindImageAsFramebuffer() {
+     // back to main framebuffer
+-    mEngine.unbindFramebuffer(mTexName, mFbName);
++    mEngine.unbindFramebuffer(mTexName, mFbName, mUseReadPixels);
+ }
+ 
+ status_t RenderEngine::BindImageAsFramebuffer::getStatus() const {
+diff --git a/services/surfaceflinger/RenderEngine/RenderEngine.h b/services/surfaceflinger/RenderEngine/RenderEngine.h
+index 3c7f9ab..e69b914 100644
+--- a/services/surfaceflinger/RenderEngine/RenderEngine.h
++++ b/services/surfaceflinger/RenderEngine/RenderEngine.h
+@@ -47,8 +47,8 @@ class RenderEngine {
+     EGLContext mEGLContext;
+     void setEGLContext(EGLContext ctxt);
+ 
+-    virtual void bindImageAsFramebuffer(EGLImageKHR image, uint32_t* texName, uint32_t* fbName, uint32_t* status) = 0;
+-    virtual void unbindFramebuffer(uint32_t texName, uint32_t fbName) = 0;
++    virtual void bindImageAsFramebuffer(EGLImageKHR image, uint32_t* texName, uint32_t* fbName, uint32_t* status, bool useReadPixels, int reqWidth, int reqHeight) = 0;
++    virtual void unbindFramebuffer(uint32_t texName, uint32_t fbName, bool useReadPixels) = 0;
+ 
+ protected:
+     RenderEngine();
+@@ -76,8 +76,9 @@ public:
+         RenderEngine& mEngine;
+         uint32_t mTexName, mFbName;
+         uint32_t mStatus;
++        bool mUseReadPixels;
+     public:
+-        BindImageAsFramebuffer(RenderEngine& engine, EGLImageKHR image);
++        BindImageAsFramebuffer(RenderEngine& engine, EGLImageKHR image, bool useReadPixels, int reqWidth, int reqHeight);
+         ~BindImageAsFramebuffer();
+         int getStatus() const;
+     };
+diff --git a/services/surfaceflinger/SurfaceFlinger.cpp b/services/surfaceflinger/SurfaceFlinger.cpp
+index 9d94c87..16b0c4b 100644
+--- a/services/surfaceflinger/SurfaceFlinger.cpp
++++ b/services/surfaceflinger/SurfaceFlinger.cpp
+@@ -634,6 +634,7 @@ int32_t SurfaceFlinger::allocateHwcDisplayId(DisplayDevice::DisplayType type) {
+ 
+ void SurfaceFlinger::startBootAnim() {
+     // start boot animation
++    mBootFinished = false;
+     property_set("service.bootanim.exit", "0");
+     property_set("ctl.start", "bootanim");
+ }
+@@ -715,10 +716,19 @@ status_t SurfaceFlinger::getDisplayInfo(const sp<IBinder>& display, DisplayInfo*
+         info->orientation = 0;
+     }
+ 
+-    info->w = hwc.getWidth(type);
+-    info->h = hwc.getHeight(type);
+-    info->xdpi = xdpi;
+-    info->ydpi = ydpi;
++    int additionalRot = mDisplays[0]->getHardwareOrientation() / 90;
++    if ((type == DisplayDevice::DISPLAY_PRIMARY) && (additionalRot & DisplayState::eOrientationSwapMask)) {
++        info->h = hwc.getWidth(type);
++        info->w = hwc.getHeight(type);
++        info->xdpi = ydpi;
++        info->ydpi = xdpi;
++    }
++    else {
++        info->w = hwc.getWidth(type);
++        info->h = hwc.getHeight(type);
++        info->xdpi = xdpi;
++        info->ydpi = ydpi;
++    }
+     info->fps = float(1e9 / hwc.getRefreshPeriod(type));
+ 
+     // All non-virtual displays are currently considered secure.
+@@ -1318,18 +1328,20 @@ void SurfaceFlinger::handleTransactionLocked(uint32_t transactionFlags)
+                         if (state.surface != NULL) {
+ 
+                             hwcDisplayId = allocateHwcDisplayId(state.type);
+-                            sp<VirtualDisplaySurface> vds = new VirtualDisplaySurface(
++                                sp<VirtualDisplaySurface> vds =
++                                              new VirtualDisplaySurface(
+                                     *mHwc, hwcDisplayId, state.surface, bq,
+                                     state.displayName);
+ 
+-                            dispSurface = vds;
+-                            if (hwcDisplayId >= 0) {
+-                                producer = vds;
+-                            } else {
+-                                // There won't be any interaction with HWC for this virtual display,
+-                                // so the GLES driver can pass buffers directly to the sink.
+-                                producer = state.surface;
+-                            }
++                                dispSurface = vds;
++                                if (hwcDisplayId >= 0) {
++                                   producer = vds;
++                                } else {
++                                  // There won't be any interaction with HWC for this virtual display,
++                                  // so the GLES driver can pass buffers directly to the sink.
++                                  producer = state.surface;
++                                }
++
+                         }
+                     } else {
+                         ALOGE_IF(state.surface!=NULL,
+@@ -1344,7 +1356,7 @@ void SurfaceFlinger::handleTransactionLocked(uint32_t transactionFlags)
+                     }
+ 
+                     const wp<IBinder>& display(curr.keyAt(i));
+-                    if (dispSurface != NULL) {
++                    if (dispSurface != NULL && producer != NULL) {
+                         sp<DisplayDevice> hw = new DisplayDevice(this,
+                                 state.type, hwcDisplayId, state.isSecure,
+                                 display, dispSurface, producer, mEGLConfig);
+@@ -1503,7 +1515,7 @@ void SurfaceFlinger::computeVisibleRegions(
+ 
+         // only consider the layers on the given layer stack
+         if (s.layerStack != layerStack)
+-            continue;
++             continue;
+ 
+         /*
+          * opaqueRegion: area of a surface that is fully opaque.
+@@ -2839,7 +2851,8 @@ public:
+ status_t SurfaceFlinger::captureScreen(const sp<IBinder>& display,
+         const sp<IGraphicBufferProducer>& producer,
+         uint32_t reqWidth, uint32_t reqHeight,
+-        uint32_t minLayerZ, uint32_t maxLayerZ) {
++        uint32_t minLayerZ, uint32_t maxLayerZ,
++        bool useReadPixels) {
+ 
+     if (CC_UNLIKELY(display == 0))
+         return BAD_VALUE;
+@@ -2865,16 +2878,18 @@ status_t SurfaceFlinger::captureScreen(const sp<IBinder>& display,
+         sp<IGraphicBufferProducer> producer;
+         uint32_t reqWidth, reqHeight;
+         uint32_t minLayerZ,maxLayerZ;
++        bool useReadPixels;
+         status_t result;
+     public:
+         MessageCaptureScreen(SurfaceFlinger* flinger,
+                 const sp<IBinder>& display,
+                 const sp<IGraphicBufferProducer>& producer,
+                 uint32_t reqWidth, uint32_t reqHeight,
+-                uint32_t minLayerZ, uint32_t maxLayerZ)
++                uint32_t minLayerZ, uint32_t maxLayerZ, bool useReadPixels)
+             : flinger(flinger), display(display), producer(producer),
+               reqWidth(reqWidth), reqHeight(reqHeight),
+               minLayerZ(minLayerZ), maxLayerZ(maxLayerZ),
++              useReadPixels(useReadPixels),
+               result(PERMISSION_DENIED)
+         {
+         }
+@@ -2884,8 +2899,10 @@ status_t SurfaceFlinger::captureScreen(const sp<IBinder>& display,
+         virtual bool handler() {
+             Mutex::Autolock _l(flinger->mStateLock);
+             sp<const DisplayDevice> hw(flinger->getDisplayDevice(display));
+-            result = flinger->captureScreenImplLocked(hw,
+-                    producer, reqWidth, reqHeight, minLayerZ, maxLayerZ);
++            bool useReadPixels = this->useReadPixels && !flinger->mGpuToCpuSupported;
++                result = flinger->captureScreenImplLocked(hw,
++                        producer, reqWidth, reqHeight, minLayerZ, maxLayerZ,
++                        useReadPixels);
+             static_cast<GraphicProducerWrapper*>(producer->asBinder().get())->exit(result);
+             return true;
+         }
+@@ -2907,7 +2924,8 @@ status_t SurfaceFlinger::captureScreen(const sp<IBinder>& display,
+     // which does the marshaling work forwards to our "fake remote" above.
+     sp<MessageBase> msg = new MessageCaptureScreen(this,
+             display, IGraphicBufferProducer::asInterface( wrapper ),
+-            reqWidth, reqHeight, minLayerZ, maxLayerZ);
++            reqWidth, reqHeight, minLayerZ, maxLayerZ,
++            useReadPixels);
+ 
+     status_t res = postMessageAsync(msg);
+     if (res == NO_ERROR) {
+@@ -2967,7 +2985,8 @@ status_t SurfaceFlinger::captureScreenImplLocked(
+         const sp<const DisplayDevice>& hw,
+         const sp<IGraphicBufferProducer>& producer,
+         uint32_t reqWidth, uint32_t reqHeight,
+-        uint32_t minLayerZ, uint32_t maxLayerZ)
++        uint32_t minLayerZ, uint32_t maxLayerZ,
++        bool useReadPixels)
+ {
+     ATRACE_CALL();
+ 
+@@ -3014,7 +3033,7 @@ status_t SurfaceFlinger::captureScreenImplLocked(
+                 if (image != EGL_NO_IMAGE_KHR) {
+                     // this binds the given EGLImage as a framebuffer for the
+                     // duration of this scope.
+-                    RenderEngine::BindImageAsFramebuffer imageBond(getRenderEngine(), image);
++                    RenderEngine::BindImageAsFramebuffer imageBond(getRenderEngine(), image, useReadPixels, reqWidth, reqHeight);
+                     if (imageBond.getStatus() == NO_ERROR) {
+                         // this will in fact render into our dequeued buffer
+                         // via an FBO, which means we didn't have to create
+@@ -3044,6 +3063,15 @@ status_t SurfaceFlinger::captureScreenImplLocked(
+                             // not fatal
+                         }
+ 
++                        if (useReadPixels) {
++                            sp<GraphicBuffer> buf = static_cast<GraphicBuffer*>(buffer);
++                            void* vaddr;
++                            if (buf->lock(GRALLOC_USAGE_SW_WRITE_OFTEN, &vaddr) == NO_ERROR) {
++                                getRenderEngine().readPixels(0, 0, buffer->stride, reqHeight, (uint32_t *)vaddr);
++                                buf->unlock();
++                            }
++                        }
++
+                         if (DEBUG_SCREENSHOTS) {
+                             uint32_t* pixels = new uint32_t[reqWidth*reqHeight];
+                             getRenderEngine().readPixels(0, 0, reqWidth, reqHeight, pixels);
+@@ -3144,12 +3172,3 @@ SurfaceFlinger::DisplayDeviceState::DisplayDeviceState(DisplayDevice::DisplayTyp
+ // ---------------------------------------------------------------------------
+ 
+ }; // namespace android
+-
+-
+-#if defined(__gl_h_)
+-#error "don't include gl/gl.h in this file"
+-#endif
+-
+-#if defined(__gl2_h_)
+-#error "don't include gl2/gl2.h in this file"
+-#endif
+diff --git a/services/surfaceflinger/SurfaceFlinger.h b/services/surfaceflinger/SurfaceFlinger.h
+index f08e66a..c1da4d4 100644
+--- a/services/surfaceflinger/SurfaceFlinger.h
++++ b/services/surfaceflinger/SurfaceFlinger.h
+@@ -96,7 +96,8 @@ public:
+     void run() ANDROID_API;
+ 
+     enum {
+-        EVENT_VSYNC = HWC_EVENT_VSYNC
++        EVENT_VSYNC = HWC_EVENT_VSYNC,
++        EVENT_ORIENTATION = HWC_EVENT_ORIENTATION
+     };
+ 
+     // post an asynchronous message to the main thread
+@@ -202,7 +203,7 @@ private:
+     virtual status_t captureScreen(const sp<IBinder>& display,
+             const sp<IGraphicBufferProducer>& producer,
+             uint32_t reqWidth, uint32_t reqHeight,
+-            uint32_t minLayerZ, uint32_t maxLayerZ);
++            uint32_t minLayerZ, uint32_t maxLayerZ, bool isCpuConsumer);
+     // called when screen needs to turn off
+     virtual void blank(const sp<IBinder>& display);
+     // called when screen is turning back on
+@@ -312,7 +313,8 @@ private:
+             const sp<const DisplayDevice>& hw,
+             const sp<IGraphicBufferProducer>& producer,
+             uint32_t reqWidth, uint32_t reqHeight,
+-            uint32_t minLayerZ, uint32_t maxLayerZ);
++            uint32_t minLayerZ, uint32_t maxLayerZ,
++            bool useReadPixels);
+ 
+     /* ------------------------------------------------------------------------
+      * EGL
+-- 
+2.1.1
+
