@@ -15,7 +15,7 @@
 #
 
 # Inherit from the common AOSP product configuration
-$(call inherit-product, $(SRC_TARGET_DIR)/product/full.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base_telephony.mk)
 
 # Inherit device configuration
 $(call inherit-product, device/lge/p880/device.mk)
