@@ -121,6 +121,10 @@ PRODUCT_PACKAGES += \
     Nfc \
     Tag
 
+# LCD density
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.sf.override_null_lcd_density = 1
+
 # Misc
 PRODUCT_PACKAGES += \
     audio.a2dp.default \

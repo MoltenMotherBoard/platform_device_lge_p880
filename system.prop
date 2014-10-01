@@ -2,8 +2,7 @@
 # system.prop for p880
 #
 
-ro.sf.lcd_density=320
-
+# RIL
 rild.libpath=/system/lib/lge-ril.so
 rild.libargs=-d /dev/ttyACM0
 ro.telephony.ril_class=X3RIL
