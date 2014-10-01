@@ -349,12 +349,18 @@ on boot
     chmod 0660 /sys/devices/platform/tegra-i2c.2/i2c-2/2-0053/torch
 
     # Hardware tunable perms
+    chown root system /sys/devices/platform/spi_tegra.4/spi4.2/gamma_saved
     chown root system /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning
     chown root system /sys/devices/platform/tspdrv/nforce_timed
+    chown root system /sys/devices/virtual/input/lge_touch/keypad_enable
+    chmod 0664 /sys/devices/platform/spi_tegra.4/spi4.2/gamma_saved
     chmod 0664 /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning
     chmod 0664 /sys/devices/platform/tspdrv/nforce_timed
+    chmod 0664 /sys/class/graphics/fb0/device/smartdimmer/enable
+    restorecon /sys/devices/platform/spi_tegra.4/spi4.2/gamma_saved
     restorecon /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning
     restorecon /sys/devices/platform/tspdrv/nforce_timed
+    restorecon /sys/devices/virtual/input/lge_touch/keypad_enable
 
 #LGE_RIL_START sabina.park@lge.com
 service rawip_rmnet1 /system/bin/init.rmnet 1
