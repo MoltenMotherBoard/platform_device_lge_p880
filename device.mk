@@ -143,9 +143,7 @@ PRODUCT_PACKAGES += \
     Camera2
 
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/prebuilt/init.rawip:system/bin/init.rawip \
-    $(LOCAL_PATH)/prebuilt/init.rmnet:system/bin/init.rmnet \
-    $(LOCAL_PATH)/prebuilt/init.rmnet-down:system/bin/init.rmnet-down
+    $(LOCAL_PATH)/prebuilt/init.rawip:system/bin/init.rawip
 
 # For SELinux
 PRODUCT_COPY_FILES += \

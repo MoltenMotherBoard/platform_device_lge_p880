@@ -296,12 +296,6 @@ on boot
     chown system radio /sys/devices/platform/tegra-i2c.4/i2c-4/4-001c/max77663-rtc.0/enablesmpl
     chown system radio /sys/devices/platform/tegra-i2c.4/i2c-4/4-001c/max77663-rtc.0/smplcount
 
-#LGE_CHANGE_S 20120720, hwansuk.kang@lge.com [data] Disable IPv6 for mobile network
-    write /proc/sys/net/ipv6/conf/rmnet0/disable_ipv6 1
-    write /proc/sys/net/ipv6/conf/rmnet1/disable_ipv6 1
-    write /proc/sys/net/ipv6/conf/rmnet2/disable_ipv6 1
-#LGE_CHANGE_E 20120720, hwansuk.kang@lge.com [data] Disable IPv6 for mobile network
-
     write /proc/sys/vm/highmem_is_dirtyable 1
     write /proc/sys/vm/lowmem_reserve_ratio 16\ 16
     write /proc/sys/vm/min_free_kbytes 4096
@@ -365,32 +359,6 @@ on boot
     restorecon /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning
     restorecon /sys/devices/platform/tspdrv/nforce_timed
     restorecon /sys/devices/virtual/input/lge_touch/keypad_enable
-
-#LGE_RIL_START sabina.park@lge.com
-service rawip_rmnet1 /system/bin/init.rmnet 1
-    user root
-    group radio cache inet misc
-    disabled
-    oneshot
-
-service rawip_rmnet2 /system/bin/init.rmnet 2
-    user root
-    group radio cache inet misc
-    disabled
-    oneshot
-
-# used to down HSI interfaces on RIL Recovery
-service rmnet1_down /system/bin/init.rmnet-down 1
-    user root
-    group radio cache inet misc
-    disabled
-    oneshot
-
-service rmnet2_down /system/bin/init.rmnet-down 2
-    user root
-    group radio cache inet misc
-    disabled
-    oneshot
 
 service dhcpcd_wlan0 /system/bin/dhcpcd -aABDKL
     class core
