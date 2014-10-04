@@ -39,7 +39,7 @@ TARGET_RECOVERY_PRE_COMMAND := "/system/bin/setup-recovery"
 
 # Try to build the kernel
 TARGET_KERNEL_SOURCE := kernel/lge/x3
-TARGET_KERNEL_CONFIG := omni_x3_defconfig
+TARGET_KERNEL_CONFIG := testing_defconfig
 
 BOARD_HAS_NO_SELECT_BUTTON := true
 BOARD_RECOVERY_SWIPE := true
