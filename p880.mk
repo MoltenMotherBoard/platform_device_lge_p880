@@ -20,6 +20,9 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base_telephony.mk)
 # Inherit device configuration
 $(call inherit-product, device/lge/p880/device.mk)
 
+# Inherit MMB vendor
+$(call inherit-product, vendor/mmb/vendor_blobs.mk)
+
 # Device identifier. This must come after all inclusions
 PRODUCT_NAME := p880
 PRODUCT_DEVICE := p880
