@@ -1,0 +1,24 @@
+From 240eae187c39a6d4e7076b6531a1f7d69eb937fe Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Mon, 6 Oct 2014 22:19:26 +0200
+Subject: [PATCH 6/6] build: switch to custom apns-conf.xml
+
+---
+ target/product/full_base_telephony.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/target/product/full_base_telephony.mk b/target/product/full_base_telephony.mk
+index f98e9a2..06e8456 100644
+--- a/target/product/full_base_telephony.mk
++++ b/target/product/full_base_telephony.mk
+@@ -27,7 +27,7 @@ PRODUCT_PROPERTY_OVERRIDES := \
+     ro.com.android.dataroaming=true
+ 
+ PRODUCT_COPY_FILES := \
+-    device/generic/goldfish/data/etc/apns-conf.xml:system/etc/apns-conf.xml
++    vendor/mmb/proprietary/system/etc/apns-conf.xml:system/etc/apns-conf.xml
+ 
+ $(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base.mk)
+ $(call inherit-product, $(SRC_TARGET_DIR)/product/telephony.mk)
+-- 
+2.1.2
