@@ -1,6 +1,6 @@
-From fce515a055005b8db9f4e8587b6c39dae7c304b3 Mon Sep 17 00:00:00 2001
+From a77fd95b35f913234b9881bbfa669e61fe97ee80 Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
-Date: Fri, 3 Oct 2014 13:11:48 +0200
+Date: Mon, 6 Oct 2014 23:09:11 +0200
 Subject: [PATCH] kernel/lge/x3: disable setting security contexts on rootfs
  inodes
 
@@ -9,10 +9,10 @@ Subject: [PATCH] kernel/lge/x3: disable setting security contexts on rootfs
  1 file changed, 4 deletions(-)
 
 diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index 9f22cf8..edfffaf 100644
+index f4ac898..3aeca7f 100644
 --- a/security/selinux/hooks.c
 +++ b/security/selinux/hooks.c
-@@ -401,10 +401,6 @@ static int sb_finish_set_opts(struct super_block *sb)
+@@ -419,10 +419,6 @@ static int sb_finish_set_opts(struct super_block *sb)
  	    sbsec->behavior > ARRAY_SIZE(labeling_behaviors))
  		sbsec->flags &= ~SE_SBLABELSUPP;
  
