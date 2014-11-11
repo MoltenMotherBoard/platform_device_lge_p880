@@ -55,7 +55,7 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/gps.conf:system/etc/gps.conf \
     $(LOCAL_PATH)/configs/hmconfig.txt:system/etc/hmconfig.txt \
-    $(LOCAL_PATH)/configs/SuplRootCert:system/etc/SuplRootCert
+    $(LOCAL_PATH)/configs/lge.cer:system/etc/cert/lge.cer
 
 ## Input
 PRODUCT_COPY_FILES += \
@@ -147,6 +147,8 @@ PRODUCT_PACKAGES += \
     Camera2
 
 PRODUCT_COPY_FILES += \
+	$(LOCAL_PATH)/prebuilt/init.rmnet:system/bin/init.rmnet \
+	$(LOCAL_PATH)/prebuilt/init.rmnet-down:system/bin/init.rmnet-down \
     $(LOCAL_PATH)/prebuilt/init.rawip:system/bin/init.rawip
 
 # For SELinux

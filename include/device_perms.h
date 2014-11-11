@@ -7,6 +7,10 @@ struct {
 } control_perms[] = {
     { "dumpstate",            AID_SHELL,    AID_LOG },
     { "ril-daemon",           AID_RADIO,    AID_RADIO },
+    { "rawip_rmnet1",         AID_RADIO,    AID_RADIO },
+    { "rawip_rmnet2",         AID_RADIO,    AID_RADIO },
+    { "rmnet1_down",          AID_RADIO,    AID_RADIO },
+    { "rmnet2_down",          AID_RADIO,    AID_RADIO },
     { "insmod_rawip",         AID_RADIO,    AID_RADIO },
     { "rmmod_rawip",          AID_RADIO,    AID_RADIO },
     { NULL, 0, 0 }
@@ -49,11 +53,15 @@ struct {
     { "persist.service.",     AID_SYSTEM,   0 },
     { "persist.service.",     AID_RADIO,    0 },
     { "persist.security.",    AID_SYSTEM,   0 },
+    { "persist.audio.",       AID_SYSTEM,   0 },
     { "sf.lcd_density",       AID_SYSTEM,   0 },
     { "net.pdp",              AID_RADIO,    AID_RADIO },
     { "net.pdp1",             AID_RADIO,    AID_RADIO },
     { "net.pdp2",             AID_RADIO,    AID_RADIO },
     { "net.rmmod.svc_done",   AID_RADIO,    AID_RADIO },
+    { "persist.sys.camera.",  AID_MEDIA,    0 },
+    { "persist.camera.",      AID_MEDIA,    0 },
+    { "wlan.hdcp2.",          AID_MEDIA,    0 },
     { "media.tegra",          AID_MEDIA,    0 },
     { NULL, 0, 0 }
 };
