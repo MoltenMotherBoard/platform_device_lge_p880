@@ -77,7 +77,7 @@ public class X3RIL extends RIL implements CommandsInterface {
 
         send(rr);
     }
-
+    
     @Override
     public void
     setCallForward(int action, int cfReason, int serviceClass,
@@ -99,11 +99,6 @@ public class X3RIL extends RIL implements CommandsInterface {
                     + timeSeconds);
 
         send(rr);
-    }
-
-    @Override
-    public void setCellInfoListRate(int rateInMillis, Message response) {
-        return;
     }
 
     static final int RIL_UNSOL_LGE_STK_PROACTIVE_SESSION_STATUS = 1041;
@@ -218,7 +213,7 @@ public class X3RIL extends RIL implements CommandsInterface {
         response.sendToTarget();
         response = null;
     }
-
+    
     @Override
     public void getImsRegistrationState(Message result) {
         if (mRilVersion >= 8) {

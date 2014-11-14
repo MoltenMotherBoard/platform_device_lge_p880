@@ -9,6 +9,9 @@ on early-init
     mkdir /mpt 0775 system system
 
 on init
+    mkdir /mnt/media_rw/sdcard1 0700 media_rw media_rw
+    mkdir /storage/sdcard1 0700 root root
+
     # See storage config details at http://source.android.com/tech/storage/
     mkdir /storage 0050 system sdcard_r
     mkdir /mnt/shell/emulated 0700 shell shell
@@ -17,6 +20,9 @@ on init
     export EXTERNAL_STORAGE /storage/emulated/legacy
     export EMULATED_STORAGE_SOURCE /mnt/shell/emulated
     export EMULATED_STORAGE_TARGET /storage/emulated
+    export SECONDARY_STORAGE /storage/sdcard1
+    export EXTERNAL_STORAGE_USB /storage/usbdisk
+
 
     # Support legacy paths
     symlink /storage/emulated/legacy /sdcard
@@ -26,8 +32,39 @@ on init
 
     mkdir /storage/sdcard1 0000 system system
 
+# USB OTG support
+    mkdir /mnt/media_rw/usbdisk 0700 media_rw media_rw
+    mkdir /storage/usbdisk 0700 root root
+    symlink /storage/usbdisk /mnt/usbdisk
+    symlink /mnt/usbdisk /usbdisk
+
+on early-boot
+    write /sys/devices/system/cpu/cpu0/online 1
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor interactive
+    write /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor interactive
+    write /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor interactive
+    write /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor interactive
+    restorecon /sys/devices/system/cpu
+    restorecon /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/boost_factor
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/core_states
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/dynamic_freq_mode
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/go_maxspeed_load
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/high_freq_min_delay
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/io_is_busy
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/max_boost
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/max_normal_freq
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/midrange_freq
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/midrange_go_maxspeed_load
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/midrange_max_boost
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/min_sample_time
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/sustain_load
+    restorecon /sys/devices/system/cpu/cpufreq/interactive/timer_rate
+
 on fs
+    mkdir /mnt/modem 0770 radio system
     mount_all ./fstab.x3
+    setprop ro.crypto.fuse_sdcard true
 
     mkdir /data/dontpanic
     chown root system /data/dontpanic
@@ -45,19 +82,15 @@ on fs
     chmod 0666 /data/misc/wifi/firmware_path
 
 on boot
-    insmod /system/lib/modules/bthid.ko
     mkdir /data/misc/bluetooth 0770 bluetooth bluetooth
-# --- BRCM
-    mkdir /data/misc/wifi 0775 wifi radio
+    mkdir /data/misc/wifi 0770 wifi radio
     mkdir /data/misc/wifi/sockets 0770 wifi wifi
-    mkdir /data/misc/dhcp 0770 dhcp dhcp
+    mkdir /data/misc/dhcp 0775 dhcp dhcp
     chown dhcp dhcp /data/misc/dhcp
     mkdir /data/nvcam 0700 media camera
     # we will remap this as /mnt/sdcard with the sdcard fuse tool
     mkdir /data/media 0775 media_rw media_rw
     chown media_rw media_rw /data/media
-
-    #insmod /system/lib/modules/tlx251_le.ko "major=245"
 
     chmod 0777 /dev/block/platform/sdhci-tegra.3/by-name/NVA
     chown system sdcard_rw /dev/block/platform/sdhci-tegra.3/by-name/NVA
@@ -70,11 +103,20 @@ on boot
     chmod 0660 /sys/class/rfkill/rfkill0/type
     chmod 0660 /sys/class/rfkill/rfkill1/state
     chmod 0660 /sys/class/rfkill/rfkill1/type
+    chmod 0660 /sys/class/rfkill/rfkill2/state
+    chmod 0660 /sys/class/rfkill/rfkill2/type
     chown bluetooth bluetooth /sys/class/rfkill/rfkill0/state
     chown bluetooth bluetooth /sys/class/rfkill/rfkill0/type
     chown bluetooth bluetooth /sys/class/rfkill/rfkill1/state
     chown bluetooth bluetooth /sys/class/rfkill/rfkill1/type
-    write /sys/class/rfkill/rfkill0/state 0
+    chown bluetooth bluetooth /sys/class/rfkill/rfkill2/state
+    chown bluetooth bluetooth /sys/class/rfkill/rfkill2/type
+    restorecon /sys/class/rfkill/rfkill0/state
+    restorecon /sys/class/rfkill/rfkill0/type
+    restorecon /sys/class/rfkill/rfkill1/state
+    restorecon /sys/class/rfkill/rfkill1/type
+    restorecon /sys/class/rfkill/rfkill2/state
+    restorecon /sys/class/rfkill/rfkill2/type
 
 # FactoryTest AT command
     chmod 0664 /sys/devices/platform/bd_address/bdaddr_if
@@ -85,6 +127,15 @@ on boot
     chmod 0220 /proc/bluetooth/sleep/btwrite
     chown bluetooth net_bt_stack /proc/bluetooth/sleep/lpm
     chown bluetooth net_bt_stack /proc/bluetooth/sleep/btwrite
+
+# audio
+    chmod 0664 /sys/power/suspend/mode
+    chown system audio /sys/power/suspend/mode
+
+# NFC
+    setprop ro.nfc.port "I2C"
+    chmod 0660 /dev/pn544
+    chown nfc system /dev/pn544
 
 # backlight
     chown system radio /sys/class/leds/lcd-backlight/brightness
@@ -117,20 +168,33 @@ on boot
     chown system radio /sys/class/power_supply/charger/device/chgcc_ta
 
 # didim
-    chown system system /sys/devices/nvhost/tegradc.0/smartdimmer/enable
-    chown system system /sys/devices/nvhost/tegradc.0/smartdimmer/aggressiveness
-    chown system system /sys/devices/nvhost/tegradc.0/smartdimmer/phase_in_video
+    chown system system /sys/class/graphics/fb0/device/smartdimmer/enable
+    chown system system /sys/class/graphics/fb0/device/smartdimmer/aggressiveness
+    chown system system /sys/class/graphics/fb0/device/smartdimmer/phase_in_adjustments
 
 # power
     chown system system /sys/kernel/tegra_cap/core_cap_level
     chown system system /sys/kernel/tegra_cap/core_cap_state
     chown system system /sys/module/cpu_tegra/parameters/cpu_user_cap
+    chown system system /sys/module/cpu_tegra3/parameters/mp_overhead
     chown system system /sys/module/cpu_tegra/parameters/force_disable_edp
+    chown system system /sys/module/cpu_tegra/parameters/force_policy_max
+    chown system system /sys/module/cpu_tegra/parameters/is_enable_boost_load_shaper
+    chown system system /sys/module/cpu_tegra/parameters/restore_token
+    chown system system /sys/module/cpu_tegra/parameters/threashold_allowed_clk
+    chown system system /sys/module/cpu_tegra/parameters/threashold_enable_token
+    chown system system /sys/module/cpu_tegra/parameters/threashold_limited_clk
+    chown system system /sys/module/cpu_tegra/parameters/token_in_bucket
+    chown system system /sys/module/cpu_tegra/parameters/vmf_for_camera
+    chown system system /sys/module/cpu_tegra/parameters/vmf_for_load_shaper
+    chown system system /sys/module/cpu_tegra/parameters/vmf_for_network
+    chown system system /sys/module/cpu_tegra/parameters/vmf_for_player
+    chown system system /sys/module/cpu_tegra/parameters/vmf_for_record
 
 # sangwon.jeon for gyro and accel.
     chmod 0666 dev/mpu
     chmod 0666 dev/mpuirq
-    chmod 0666 dev/slaveirq
+    chmod 0666 dev/accelirq
     chmod 0666 dev/timerirq
 
 # PROXIMITY SENSOR
@@ -159,52 +223,83 @@ on boot
     chown system system /sys/bus/i2c/drivers/apds990x/0-0039/ps_cal_result
     chmod 0660 /sys/bus/i2c/drivers/apds990x/0-0039/ps_cal_result
 
+# BB remote file system
+    mkdir /data/rfs
+    mkdir /data/rfs/data
+    mkdir /data/rfs/data/modem
+    mkdir /data/rfs/data/debug
+    chown radio system /data/rfs/data
+    chown radio system /data/rfs/data/modem
+    chown radio log /data/rfs/data/debug
+    symlink /system/vendor/firmware/data/config /data/rfs/data/config
+    symlink /system/vendor/firmware/app /data/rfs/app
+    symlink /mnt/modem/data/factory /data/rfs/data/factory
+
+# BB mapping symbolic name to the logging ttyACM port
+    symlink /dev/ttyACM0 /dev/log_modem
+    chmod 775 /data/rfs/data/debug
+
+# GPIO BB access for user radio
+    chown radio system /sys/class/gpio/gpio222/value
+
 # Power management settings
     write /sys/module/cpu_tegra3/parameters/no_lp 0
     #write /sys/module/tegra3_emc/parameters/emc_enable 0
     #write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 1000000
-    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor interactive
-    write /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor interactive
-    write /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor interactive
-    write /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor interactive
-    chown system system /sys/devices/system/cpu/cpufreq/interactive/cores_states
-    chmod 0644 /sys/devices/system/cpu/cpufreq/interactive/cores_states
-    chown system system /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
-    chmod 0644 /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
-    write /sys/module/cpu_tegra/parameters/force_policy_max Y
+    write /sys/module/cpu_tegra/parameters/force_policy_max 1
     write /sys/devices/system/cpu/cpufreq/interactive/boost_factor 2
     write /sys/devices/system/cpu/cpufreq/interactive/sustain_load 80
     write /sys/module/cpu_tegra3/parameters/auto_hotplug 1
-    write /sys/module/cpuidle/parameters/lp2_in_idle 1
+    #write /sys/module/cpuidle_t3/parameters/lp2_0_in_idle 0
+    write /sys/module/cpuidle/parameters/lp2_in_idle 0
 
-# Interactive dynamic frequecy mode settings
-    write /sys/devices/system/cpu/cpufreq/interactive/go_maxspeed_load 95
-    write /sys/devices/system/cpu/cpufreq/interactive/dynamic_freq_mode 1
-    write /sys/devices/system/cpu/cpufreq/interactive/min_sample_time 20000
+# Interactive governor settings
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/boost_factor
+    chmod 0660 /sys/devices/system/cpu/cpufreq/interactive/boost_factor
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/go_maxspeed_load
+    chmod 0660 /sys/devices/system/cpu/cpufreq/interactive/go_maxspeed_load
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/io_is_busy
+    chmod 0660 /sys/devices/system/cpu/cpufreq/interactive/io_is_busy
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/max_boost
+    chmod 0660 /sys/devices/system/cpu/cpufreq/interactive/max_boost
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/sustain_load
+    chmod 0660 /sys/devices/system/cpu/cpufreq/interactive/sustain_load
+
+# Misc Settings
+    chown system system /sys/kernel/tegra_cap/cbus_cap_level
+    chown system system /sys/kernel/tegra_cap/cbus_cap_state
+    chown system system /sys/devices/tegradc.0/enable
+    chown system system /sys/devices/tegradc.1/enable
+    chown system system /sys/devices/gr3d/enable_3d_scaling
+    chown system system /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+    restorecon /sys/devices/tegradc.0/smartdimmer/aggressiveness
+    restorecon /sys/devices/tegradc.0/smartdimmer/enable
+
+# Give system access to TCP autotuning settings
+    chown system system /sys/kernel/ipv4/tcp_wmem_min
+    chown system system /sys/kernel/ipv4/tcp_wmem_def
+    chown system system /sys/kernel/ipv4/tcp_wmem_max
+    chown system system /sys/kernel/ipv4/tcp_rmem_min
+    chown system system /sys/kernel/ipv4/tcp_rmem_def
+    chown system system /sys/kernel/ipv4/tcp_rmem_max
+
+# nvdps
+    chown system system /sys/class/graphics/fb0/device/nvdps
+
+# USB On The Go - Host Mode
+    chown system system /sys/devices/platform/tegra-otg/enable_host
+
+# Default Read Ahead value for sdcards
+    write /sys/block/mmcblk0/queue/read_ahead_kb 2048
+    write /sys/block/mmcblk1/queue/read_ahead_kb 2048
 
 # Power Save for camera preview and recording
     chown media camera /sys/devices/platform/tegra_camera/power_save_preview
     chown media camera /sys/devices/platform/tegra_camera/power_save_rec
 
-# Power management for jpeg decode
-    chown media sdcard_rw /sys/devices/nvavp/jpeg_decode
-
     chown system radio /sys/devices/platform/tegra-i2c.4/i2c-4/4-001c/max77663-rtc.0/enablesmpl
     chown system radio /sys/devices/platform/tegra-i2c.4/i2c-4/4-001c/max77663-rtc.0/smplcount
-    write /sys/block/mmcblk0/queue/read_ahead_kb 2048
-    write /sys/block/mmcblk1/queue/read_ahead_kb 2048
 
-#LGE_CHANGE_S 20121126, hwansuk.kang@lge.com [data] TCP increase rmem_max value for downlink data throughput
-    write /proc/sys/net/core/rmem_max 393213
-#LGE_CHANGE_E 20121126, hwansuk.kang@lge.com [data] TCP increase rmem_max value for downlink data throughput
-
-#LGE_CHANGE_S 20120720, hwansuk.kang@lge.com [data] Disable IPv6 for mobile network
-    write /proc/sys/net/ipv6/conf/rmnet0/disable_ipv6 1
-    write /proc/sys/net/ipv6/conf/rmnet1/disable_ipv6 1
-    write /proc/sys/net/ipv6/conf/rmnet2/disable_ipv6 1
-#LGE_CHANGE_E 20120720, hwansuk.kang@lge.com [data] Disable IPv6 for mobile network
-
-#LGE_RIL_START sabina.park@lge.com
 service rawip_rmnet1 /system/bin/init.rmnet 1
     user root
     group radio cache inet misc
@@ -218,7 +313,7 @@ service rawip_rmnet2 /system/bin/init.rmnet 2
     oneshot
 
 # used to down HSI interfaces on RIL Recovery
-service rmnet1_down /system/bin/init.rmnet-down 1
+    service rmnet1_down /system/bin/init.rmnet-down 1
     user root
     group radio cache inet misc
     disabled
@@ -230,12 +325,12 @@ service rmnet2_down /system/bin/init.rmnet-down 2
     disabled
     oneshot
 
-service dhcpcd_wlan0 /system/bin/dhcpcd -aBKAL
-    class core
+service dhcpcd_p2p /system/bin/dhcpcd -aABKL
+    class main
     disabled
     oneshot
 
-service iprenew_wlan0 /system/bin/dhcpcd -n
+service dhcpcd_wlan0 /system/bin/dhcpcd -aABKL
     class main
     disabled
     oneshot
@@ -245,51 +340,107 @@ service dhcpcd_p2p /system/bin/dhcpcd -aABKL
     disabled
     oneshot
 
+service dhcpcd_eth0 /system/bin/dhcpcd -ABKL -f/system/etc/dhcpcd/dhcpcd.conf
+     class main
+     disabled
+     oneshot
+
+service dhcpcd_bt-pan /system/bin/dhcpcd -ABKL
+    class main
+    disabled
+    oneshot
+
+service iprenew_bt-pan /system/bin/dhcpcd -n
+    class main
+    disabled
+    oneshot
+
+service iprenew_wlan0 /system/bin/dhcpcd -n
+    class main
+    disabled
+    oneshot
+
 service iprenew_p2p /system/bin/dhcpcd -n
     class main
     disabled
     oneshot
 
+service iprenew_eth0 /system/bin/dhcpcd -n
+    class main
+    disabled
+    oneshot
+
+# Adjust socket buffer to enlarge TCP receive window for high bandwidth
+# but only if ro.data.large_tcp_window_size property is set.
+on property:ro.data.large_tcp_window_size=true
+    write /proc/sys/net/ipv4/tcp_adv_win_scale 2
+
 service p2p_supplicant /system/bin/wpa_supplicant \
-    -iwlan0 -Dnl80211 -c/data/misc/wifi/wpa_supplicant.conf -N \
-    -ip2p0 -Dnl80211 -c/data/misc/wifi/p2p_supplicant.conf -e/data/misc/wifi/entropy.bin -puse_p2p_group_interface=1
-    # we will start as root and wpa_supplicant will switch to user wifi
-    # after setting up the capabilities required for WEXT
-    # user wifi
-    # group wifi inet keystore
+    -iwlan0 -Dnl80211 -c/data/misc/wifi/wpa_supplicant.conf \
+    -I/system/etc/wifi/wpa_supplicant_overlay.conf \
+    -O/data/misc/wifi/sockets -N \
+    -ip2p0 -Dnl80211 -c/data/misc/wifi/p2p_supplicant.conf \
+    -I/system/etc/wifi/p2p_supplicant_overlay.conf \
+    -puse_p2p_group_interface=1 -e/data/misc/wifi/entropy.bin \
+    -g@android:wpa_wlan0
+    #   we will start as root and wpa_supplicant will switch to user wifi
+    #   after setting up the capabilities required for WEXT
+    #   user wifi
+    #   group wifi inet keystore
     class main
     socket wpa_wlan0 dgram 660 wifi wifi
     disabled
     oneshot
 
 service wpa_supplicant /system/bin/wpa_supplicant \
-    -iwlan0 -Dnl80211 -c/data/misc/wifi/wpa_supplicant.conf -e/data/misc/wifi/entropy.bin
-    # we will start as root and wpa_supplicant will switch to user wifi
-    # after setting up the capabilities required for WEXT
-    # user wifi
-    # group wifi inet keystore
+    -iwlan0 -Dnl80211 -c/data/misc/wifi/wpa_supplicant.conf \
+    -I/system/etc/wifi/wpa_supplicant_overlay.conf \
+    -O/data/misc/wifi/sockets \
+    -e/data/misc/wifi/entropy.bin -g@android:wpa_wlan0
+    #   we will start as root and wpa_supplicant will switch to user wifi
+    #   after setting up the capabilities required for WEXT
+    #   user wifi
+    #   group wifi inet keystore
     class main
     socket wpa_wlan0 dgram 660 wifi wifi
     disabled
     oneshot
 
-service sdcard /system/bin/sdcard /data/media /mnt/shell/emulated 1023 1023
+service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated
     class late_start
 
-on boot
-    write /sys/class/gpio/export 61
+service fuse_sdcard1 /system/bin/sdcard -u 1023 -g 1023 -d /mnt/media_rw/sdcard1 /storage/sdcard1
+    class late_start
+    disabled
 
+service fuse_usbdisk /system/bin/sdcard -u 1023 -g 1023 -d /mnt/media_rw/usbdisk /storage/usbdisk
+    class late_start
+    disabled
+
+on boot
+    write /proc/sys/vm/highmem_is_dirtyable 1
+    write /proc/sys/vm/lowmem_reserve_ratio 16\ 16
+    write /proc/sys/vm/min_free_kbytes 4096
+
+# GPS init
+    write /sys/class/gpio/export 61
+    write /sys/class/gpio/gpio61/value 0
+    write /sys/class/gpio/gpio61/direction out
+    chown gps system /sys/class/gpio/gpio61/value
+    chmod 0664 /sys/class/gpio/gpio61/value
     chown system system /sys/devices/platform/gps_gpio/poweron
     chown system system /sys/devices/platform/gps_gpio/reset
     chown system system /sys/devices/platform/gps_gpio/eclk
     chown system system /dev/pts17
     mkdir /data/gps
     chmod 770 /data/gps
-    chown system system /data/gps
+    chown gps system /data/gps
     chmod 770 /system/etc/cert/lge.cer
     chown system system /system/etc/cert/lge.cer
     chmod 770 /system/etc/hmconfig.txt
     chown system system /system/etc/hmconfig.txt
+    chown gps system /dev/ttyHS1
+    chmod 0660 /dev/ttyHS1
     chown audio audio /dev/pts29
 
     mkdir /cal/secclk 0770 system system
@@ -323,25 +474,15 @@ service charger /charger
 #    group system
 
 on boot
+    chown system system /sys/class/power_supply/battery/temp_control
+    chmod 0664 /sys/class/power_supply/battery/temp_control
     chown system system /sys/power/lge_logstart
     chmod 0660 /sys/power/lge_logstart
-
-service rdlsc /system/xbin/rdlsc
-    user root
-    group root
-    oneshot
-
-on boot
-    start rdlsc
 
 service lgsecclk /system/bin/lgsecclkserver
     class main
     user system
     group system sdcard_rw media_rw
-
-# restart when servicemanager is restarted
-on property:init.svc.servicemanager=restarting
-    restart lgsecclk
 
 ########################################
 # CAPP_DRM
@@ -360,30 +501,66 @@ service tf_daemon /system/bin/tf_daemon -storageDir /cal/widevine -d
 # restart when servicemanager is restarted
 on property:init.svc.servicemanager=restarting
     restart lgdrm
+    restart lgsecclk
 
 on post-fs-data
     # create directory for lgdrm
     mkdir /data/lgdrm 0770 system media
     setprop vold.post_fs_data_done 1
 
-    # Set buffer sizes from stock (lower readmax) 
-    setprop net.tcp.buffersize.default 4096,87380,393216,4096,16384,110208
+# NETWORK: NAT setting
+# To prevent out of WINDOW ACK from making
+# connection tracking to treat them as INVALID packet
+    write /proc/sys/net/netfilter/nf_conntrack_tcp_be_liberal 1
+
+# Wifi: Disable the IPv6 of p2p0 interface
+    write /proc/sys/net/ipv6/conf/p2p0/disable_ipv6 1
+
+# Flash storage isn't a good entropy source, and only causes locking
+# overhead in the kernel. Turn it off.
+    write /sys/block/mmcblk0/queue/add_random 0
+
+#LGE_CHANGE_S 20120720, hwansuk.kang@lge.com [data] Disable IPv6 for mobile network
+	write /proc/sys/net/ipv6/conf/rmnet0/disable_ipv6 1
+	write /proc/sys/net/ipv6/conf/rment1/disable_ipv6 1
+	write /proc/sys/net/ipv6/conf/rmnet2/disable_ipv6 1
+#LGE_CHANGE_E 20120720, hwansuk.kang@lge.com [data] Disable IPv6 for mobile network
+
+    # Define TCP buffer sizes for various networks
+    # ReadMin, ReadInitial, ReadMax, WriteMin, WriteInitial, WriteMax,
+    setprop net.tcp.buffersize.default 4096,87380,110208,4096,16384,110208
     setprop net.tcp.buffersize.wifi    524288,1048576,2097152,262144,524288,1048576
     setprop net.tcp.buffersize.lte     524288,1048576,2097152,262144,524288,1048576
-    setprop net.tcp.buffersize.umts    4094,87380,393216,4096,16384,110208
-    setprop net.tcp.buffersize.hspa    4094,87380,393216,4096,16384,110208
-    setprop net.tcp.buffersize.hsupa   4094,87380,393216,4096,16384,110208
-    setprop net.tcp.buffersize.hsdpa   4094,87380,393216,4096,16384,110208
+    setprop net.tcp.buffersize.umts    4094,87380,110208,4096,16384,110208
+    setprop net.tcp.buffersize.hspa    4094,87380,1220608,4096,16384,1220608
+    setprop net.tcp.buffersize.hsupa   4094,87380,1220608,4096,16384,1220608
+    setprop net.tcp.buffersize.hsdpa   4094,87380,1220608,4096,16384,1220608
+    setprop net.tcp.buffersize.hspap   4094,87380,1220608,4096,16384,1220608
     setprop net.tcp.buffersize.edge    4093,26280,35040,4096,16384,35040
     setprop net.tcp.buffersize.gprs    4092,8760,11680,4096,8760,11680
+    setprop net.tcp.buffersize.evdo    4094,87380,262144,4096,16384,262144
+
+    # Assign TCP buffer thresholds to be ceiling value of technology maximums
+    # Increased technology maximums should be reflected here.
+    write /proc/sys/net/core/rmem_max  2097152
+    write /proc/sys/net/core/wmem_max  2097152
 
 # Hardware tunable perms
+    chown root system /sys/devices/platform/spi_tegra.4/spi4.2/gamma_saved
     chown root system /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning
     chown root system /sys/devices/platform/tspdrv/nforce_timed
+    chown root system /sys/devices/virtual/input/lge_touch/keypad_enable
+    chown root system /sys/class/graphics/fb0/device/smartdimmer/enable
+    chmod 0664 /sys/devices/platform/spi_tegra.4/spi4.2/gamma_saved
     chmod 0664 /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning
     chmod 0664 /sys/devices/platform/tspdrv/nforce_timed
+    chmod 0664 /sys/devices/virtual/input/lge_touch/keypad_enable
+    chmod 0664 /sys/class/graphics/fb0/device/smartdimmer/enable
+    restorecon /sys/devices/platform/spi_tegra.4/spi4.2/gamma_saved
     restorecon /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning
     restorecon /sys/devices/platform/tspdrv/nforce_timed
+    restorecon /sys/devices/virtual/input/lge_touch/keypad_enable
+    restorecon /sys/class/graphics/fb0/device/smartdimmer/enable
 
 service insmod_rawip /system/bin/init.rawip 1
     user root
@@ -399,3 +576,25 @@ service rmmod_rawip /system/bin/init.rawip 0
 
 on property:dev.bootcomplete=1
     write /sys/devices/platform/tegra-i2c.0/i2c-0/0-0039/run_calibration 1
+    # Set up power modes
+    write /sys/devices/system/cpu/cpu1/online 1
+    write /sys/devices/system/cpu/cpu2/online 1
+    write /sys/devices/system/cpu/cpu3/online 1
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 102000
+    write /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq 102000
+    write /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq 102000
+    write /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq 102000
+    chown system system /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+    chown system system /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+    chown system system /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
+    chown system system /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
+    chown system system /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
+    chown system system /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq
+    chown system system /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
+    chown system system /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
+    chown root system /sys/devices/system/cpu/cpu1/online
+    chown root system /sys/devices/system/cpu/cpu2/online
+    chown root system /sys/devices/system/cpu/cpu3/online
+    chmod 664 /sys/devices/system/cpu/cpu1/online
+    chmod 664 /sys/devices/system/cpu/cpu2/online
+    chmod 664 /sys/devices/system/cpu/cpu3/online

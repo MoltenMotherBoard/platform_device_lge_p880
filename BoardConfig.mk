@@ -28,11 +28,11 @@ BOARD_KERNEL_BASE := 0x10000000
 BOARD_KERNEL_PAGESIZE := 2048
 
 # fix this up by examining /proc/mtd on a running device
-BOARD_BOOTIMAGE_PARTITION_SIZE := 10485760        # 10M
-BOARD_RECOVERYIMAGE_PARTITION_SIZE := 10485760    # 10M
-BOARD_SYSTEMIMAGE_PARTITION_SIZE := 1610612736    # 1.5GB
-BOARD_USERDATAIMAGE_PARTITION_SIZE := 13375635456 # 12.3GB
-BOARD_FLASH_BLOCK_SIZE := 4096
+BOARD_BOOTIMAGE_PARTITION_SIZE := 16777216        #  16.0 MB
+BOARD_RECOVERYIMAGE_PARTITION_SIZE := 16777216    #  16.0 MB
+BOARD_SYSTEMIMAGE_PARTITION_SIZE := 1056859750    #   0.9 GB
+BOARD_USERDATAIMAGE_PARTITION_SIZE := 13164074762 #  12.5 GB
+BOARD_FLASH_BLOCK_SIZE := 131072                  # 128.0 KB  
 BOARD_HAS_LARGE_FILESYSTEM := true
 
 TARGET_RECOVERY_PRE_COMMAND := "/system/bin/setup-recovery"
@@ -52,13 +52,8 @@ TARGET_SPECIFIC_HEADER_PATH := device/lge/p880/include
 BOARD_EGL_CFG := device/lge/p880/configs/egl.cfg
 USE_OPENGL_RENDERER := true
 TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := true
-
-# Old blobs support
-#BOARD_EGL_NEEDS_LEGACY_FB := true # either this or SKIP_FIRST_DEQUEUE is needed (preferably the latter)
-#BOARD_USE_MHEAP_SCREENSHOT := true
-#BOARD_EGL_SKIP_FIRST_DEQUEUE := true
-#BOARD_NEEDS_OLD_HWC_API := true
-#BOARD_EGL_WORKAROUND_BUG_10194508 := true
+BOARD_NO_ALLOW_DEQUEUE_CURRENT_BUFFER := true
+BOARD_USE_SKIA_LCDTEXT := true
 
 # Enable WEBGL in WebKit
 ENABLE_WEBGL := true
@@ -67,17 +62,17 @@ ENABLE_WEBGL := true
 BOARD_CAMERA_HAVE_ISO := true
 
 # Wifi related defines
-WPA_SUPPLICANT_VERSION      := VER_0_8_X
-BOARD_WLAN_DEVICE           := bcmdhd
 BOARD_WPA_SUPPLICANT_DRIVER := NL80211
+WPA_SUPPLICANT_VERSION := VER_0_8_X
 BOARD_WPA_SUPPLICANT_PRIVATE_LIB := lib_driver_cmd_bcmdhd
-BOARD_HOSTAPD_DRIVER        := NL80211
-BOARD_HOSTAPD_PRIVATE_LIB   := lib_driver_cmd_bcmdhd
-WIFI_BAND                   := 802_11_ABG
-WIFI_DRIVER_FW_PATH_PARAM   := "/sys/module/bcmdhd/parameters/firmware_path"
-WIFI_DRIVER_FW_PATH_STA     := "/system/vendor/firmware/fw_bcmdhd.bin"
-WIFI_DRIVER_FW_PATH_P2P     := "/system/vendor/firmware/fw_bcmdhd.bin"
-WIFI_DRIVER_FW_PATH_AP      := "/system/vendor/firmware/fw_bcmdhd_apsta.bin"
+BOARD_HOSTAPD_DRIVER := NL80211
+BOARD_HOSTAPD_PRIVATE_LIB := lib_driver_cmd_bcmdhd
+BOARD_WLAN_DEVICE := bcmdhd
+WIFI_DRIVER_FW_PATH_PARAM := "/sys/module/bcmdhd/parameters/firmware_path"
+WIFI_DRIVER_FW_PATH_STA := "/system/etc/firmware/fw_bcmdhd_p2p.bin"
+WIFI_DRIVER_FW_PATH_P2P := "/system/etc/firmware/fw_bcmdhd_p2p.bin"
+WIFI_DRIVER_FW_PATH_AP := "/system/etc/firmware/fw_bcmdhd_apsta.bin"
+BOARD_LEGACY_NL80211_STA_EVENTS := true
 
 TARGET_BOOTANIMATION_PRELOAD := true
 TARGET_BOOTANIMATION_TEXTURE_CACHE := true
@@ -101,14 +96,16 @@ BOARD_BATTERY_DEVICE_NAME := battery
 # Skip droiddoc build to save build time
 BOARD_SKIP_ANDROID_DOC_BUILD := true
 
-BOARD_SEPOLICY_DIRS += \
-    device/lge/p880/sepolicy
-
-BOARD_SEPOLICY_UNION += \
+ifeq ($(HAVE_SELINUX),true)
+BOARD_SEPOLICY_DIRS := \
+    device/lge/p880/selinux
+    
+BOARD_SEPOLICY_UNION := \
     file_contexts \
     file.te \
     device.te \
     domain.te
+endif
 
 # TWRP
 DEVICE_RESOLUTION := 720x1280
