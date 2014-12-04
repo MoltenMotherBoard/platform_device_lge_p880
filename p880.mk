@@ -14,70 +14,20 @@
 # limitations under the License.
 #
 
-# Inherit from the common AOSP product configuration
-$(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base_telephony.mk)
-
-# Inherit MMB vendor
-$(call inherit-product, vendor/mmb/vendor_blobs.mk)
-
-# Setup Dalvik VM configs.
-$(call inherit-product, frameworks/native/build/phone-xhdpi-1024-dalvik-heap.mk)
-
-# Use common BCM stuff.
-$(call inherit-product, hardware/broadcom/wlan/bcmdhd/firmware/bcm4330/device-bcm.mk)
-
-$(call inherit-product, vendor/lge/p880/device-vendor.mk)
-
-# This device is xhdpi
-PRODUCT_AAPT_CONFIG := normal hdpi xhdpi
-PRODUCT_AAPT_PREF_CONFIG := xhdpi
-
-DEVICE_PACKAGE_OVERLAYS += device/lge/p880/overlay
-
-PRODUCT_TAGS += dalvik.gc.type-precise
-
 LOCAL_PATH := device/lge/p880
 
-## Recovery
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/recovery/postrecoveryboot.sh:recovery/root/sbin/postrecoveryboot.sh \
-    $(LOCAL_PATH)/recovery/rebootrecovery.sh:recovery/root/sbin/rebootrecovery.sh \
-    $(LOCAL_PATH)/recovery/recovery.sh:system/bin/setup-recovery \
-    $(LOCAL_PATH)/recovery/twrp.fstab:recovery/root/etc/twrp.fstab
+# Inherit common AOSP product configuration
+$(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base_telephony.mk)
+# Inherit MMB vendor
+$(call inherit-product, vendor/mmb/vendor_blobs.mk)
+# InheriDalvik VM configs
+$(call inherit-product, frameworks/native/build/phone-xhdpi-1024-dalvik-heap.mk)
+# Inherit BCM firmware stuff
+$(call inherit-product, hardware/broadcom/wlan/bcmdhd/firmware/bcm4330/device-bcm.mk)
+# Inherit P880 vendor blobs
+$(call inherit-product, vendor/lge/p880/device-vendor.mk)
 
-## Boot image
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/rootdir/fstab.x3:root/fstab.x3 \
-    $(LOCAL_PATH)/rootdir/init.recovery.x3.rc:root/init.recovery.x3.rc \
-    $(LOCAL_PATH)/rootdir/init.x3.rc:root/init.x3.rc \
-    $(LOCAL_PATH)/rootdir/init.x3.usb.rc:root/init.x3.usb.rc \
-    $(LOCAL_PATH)/rootdir/ueventd.x3.rc:root/ueventd.x3.rc
-
-## Miscellaneous configs
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/bcmdhd.cal:system/etc/wifi/bcmdhd.cal \
-    $(LOCAL_PATH)/configs/ipc_channels.config:system/etc/ipc_channels.config \
-    $(LOCAL_PATH)/configs/nfcee_access.xml:system/etc/nfcee_access.xml
-
-## Media
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/enctune.conf:system/etc/enctune.conf \
-    $(LOCAL_PATH)/configs/media_codecs.xml:system/etc/media_codecs.xml \
-    $(LOCAL_PATH)/configs/media_profiles.xml:system/etc/media_profiles.xml \
-    $(LOCAL_PATH)/configs/nvcamera.conf:system/etc/nvcamera.conf
-## GPS
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/hmconfig.txt:system/etc/hmconfig.txt \
-    $(LOCAL_PATH)/configs/lge.cer:system/etc/cert/lge.cer
-
-## Input
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/MHLRCP.kl:system/usr/keylayout/MHLRCP.kl \
-    $(LOCAL_PATH)/configs/tegra-snd-max98088.kl:system/usr/keylayout/tegra-snd-max98088.kl \
-    $(LOCAL_PATH)/configs/touch_dev.kl:system/usr/keylayout/touch_dev.kl \
-    $(LOCAL_PATH)/configs/touch_dev.idc:system/usr/idc/touch_dev.idc
-
-## Audio config
+## Audio
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/audio_policy.conf:system/etc/audio_policy.conf \
     $(LOCAL_PATH)/configs/asound.conf:system/etc/asound.conf \
@@ -100,7 +50,40 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/alsa/pcm/surround51.conf:system/usr/share/alsa/pcm/surround51.conf \
     $(LOCAL_PATH)/configs/alsa/pcm/surround71.conf:system/usr/share/alsa/pcm/surround71.conf
 
-# Permission files
+## Boot image
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/rootdir/fstab.x3:root/fstab.x3 \
+    $(LOCAL_PATH)/rootdir/init.recovery.x3.rc:root/init.recovery.x3.rc \
+    $(LOCAL_PATH)/rootdir/init.x3.rc:root/init.x3.rc \
+    $(LOCAL_PATH)/rootdir/init.x3.usb.rc:root/init.x3.usb.rc \
+    $(LOCAL_PATH)/rootdir/ueventd.x3.rc:root/ueventd.x3.rc
+
+## GPS
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/hmconfig.txt:system/etc/hmconfig.txt \
+    $(LOCAL_PATH)/configs/lge.cer:system/etc/cert/lge.cer
+
+## Input
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/MHLRCP.kl:system/usr/keylayout/MHLRCP.kl \
+    $(LOCAL_PATH)/configs/tegra-snd-max98088.kl:system/usr/keylayout/tegra-snd-max98088.kl \
+    $(LOCAL_PATH)/configs/touch_dev.kl:system/usr/keylayout/touch_dev.kl \
+    $(LOCAL_PATH)/configs/touch_dev.idc:system/usr/idc/touch_dev.idc
+
+## Media
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/enctune.conf:system/etc/enctune.conf \
+    $(LOCAL_PATH)/configs/media_codecs.xml:system/etc/media_codecs.xml \
+    $(LOCAL_PATH)/configs/media_profiles.xml:system/etc/media_profiles.xml \
+    $(LOCAL_PATH)/configs/nvcamera.conf:system/etc/nvcamera.conf
+
+## Miscellaneous configs
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/bcmdhd.cal:system/etc/wifi/bcmdhd.cal \
+    $(LOCAL_PATH)/configs/ipc_channels.config:system/etc/ipc_channels.config \
+    $(LOCAL_PATH)/configs/nfcee_access.xml:system/etc/nfcee_access.xml
+
+## Permission
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.bluetooth_le.xml:system/etc/permissions/android.hardware.bluetooth_le.xml \
     frameworks/native/data/etc/android.hardware.camera.flash-autofocus.xml:system/etc/permissions/android.hardware.camera.flash-autofocus.xml \
@@ -121,16 +104,23 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/handheld_core_hardware.xml:system/etc/permissions/handheld_core_hardware.xml \
     $(LOCAL_PATH)/configs/nvcpud.xml::system/etc/permissions/nvcpud.xml
 
-# Charger mode
+## Recovery
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/recovery/postrecoveryboot.sh:recovery/root/sbin/postrecoveryboot.sh \
+    $(LOCAL_PATH)/recovery/rebootrecovery.sh:recovery/root/sbin/rebootrecovery.sh \
+    $(LOCAL_PATH)/recovery/recovery.sh:system/bin/setup-recovery \
+    $(LOCAL_PATH)/recovery/twrp.fstab:recovery/root/etc/twrp.fstab
+
+## Charger
 PRODUCT_PACKAGES += \
     charger \
     charger_res_images
 
-PRODUCT_PACKAGES += \
-    audio.a2dp.default \
-    com.android.future.usb.accessory
+## LCD density
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.sf.override_null_lcd_density = 1
 
-# NFC packages
+## NFC
 PRODUCT_PACKAGES += \
     com.android.nfc_extras \
     libnfc \
@@ -138,18 +128,13 @@ PRODUCT_PACKAGES += \
     Nfc \
     Tag
 
-# LCD density
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.sf.override_null_lcd_density = 1
+## Network scripts
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/prebuilt/init.rmnet:system/bin/init.rmnet \
+    $(LOCAL_PATH)/prebuilt/init.rmnet-down:system/bin/init.rmnet-down \
+    $(LOCAL_PATH)/prebuilt/init.rawip:system/bin/init.rawip
 
-# Misc
-PRODUCT_PACKAGES += \
-    audio.a2dp.default \
-    audio.r_submix.default \
-    com.android.future.usb.accessory \
-    libnetcmdiface
-
-# Source-built
+## OpenSource modules
 PRODUCT_PACKAGES += \
     audio.primary.tegra \
     audio_policy.tegra \
@@ -158,21 +143,26 @@ PRODUCT_PACKAGES += \
     lights.x3 \
     nfc.x3
 
-# Other packages
-PRODUCT_PACKAGES += \
-    Launcher3 \
-    Camera2
-
-PRODUCT_COPY_FILES += \
-	$(LOCAL_PATH)/prebuilt/init.rmnet:system/bin/init.rmnet \
-	$(LOCAL_PATH)/prebuilt/init.rmnet-down:system/bin/init.rmnet-down \
-    $(LOCAL_PATH)/prebuilt/init.rawip:system/bin/init.rawip
-
-# For SELinux
+## SELinux
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/prebuilt/51selinux:system/etc/init.d/51selinux
 
-# Device identifier. This must come after all inclusions
+## Misc
+PRODUCT_PACKAGES += \
+    audio.a2dp.default \
+    audio.r_submix.default \
+    Camera2 \
+    com.android.future.usb.accessory \
+    e2fsck \
+    Launcher3 \
+    libnetcmdiface \
+    libemoji.so
+
+# Device identifiers
+PRODUCT_AAPT_CONFIG := normal hdpi xhdpi
+PRODUCT_AAPT_PREF_CONFIG := xhdpi
+DEVICE_PACKAGE_OVERLAYS += device/lge/p880/overlay
+PRODUCT_TAGS += dalvik.gc.type-precise
 PRODUCT_BUILD_PROP_OVERRIDES += BUILD_UTC_DATE=0
 PRODUCT_NAME := p880
 PRODUCT_DEVICE := p880
