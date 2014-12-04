@@ -1,0 +1,35 @@
+From 3e794c56bfc46adfa04070b14b2cdffb4e205edf Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Thu, 4 Dec 2014 11:38:58 +0100
+Subject: [PATCH] hardware/broadcom/wlan: dhd: add missing fini interface
+ command Needed to fix this error in Netd init: W/InterfaceController: error
+ (Symbol not found) while searching for the interface command fini function
+
+PS: This is not called on Wifi Toggle or AP mode switch
+
+Commit: https://github.com/CyanogenMod/android_hardware_broadcom_wlan/commit/6863a0b90384a0fcb2d6280923e942242293f1c0
+---
+ bcmdhd/bcmdhd_net_iface/bcmdhd_net_iface.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/bcmdhd/bcmdhd_net_iface/bcmdhd_net_iface.c b/bcmdhd/bcmdhd_net_iface/bcmdhd_net_iface.c
+index b724fdb..8f4b962 100644
+--- a/bcmdhd/bcmdhd_net_iface/bcmdhd_net_iface.c
++++ b/bcmdhd/bcmdhd_net_iface/bcmdhd_net_iface.c
+@@ -37,6 +37,14 @@ int net_iface_send_command_init(void) {
+ 	}
+ }
+ 
++int net_iface_send_command_fini(void) {
++	if (state.sock >= 0) {
++		close(state.sock);
++		state.sock = -1;
++	}
++	return 0;
++}
++
+ /*
+  * Arguments:
+  *	  argv[2] - wlan interface
+-- 
+1.9.3
