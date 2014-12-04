@@ -156,7 +156,8 @@ PRODUCT_PACKAGES += \
     e2fsck \
     Launcher3 \
     libnetcmdiface \
-    libemoji.so
+    libemoji.so \
+    su
 
 # Device identifiers
 PRODUCT_AAPT_CONFIG := normal hdpi xhdpi
