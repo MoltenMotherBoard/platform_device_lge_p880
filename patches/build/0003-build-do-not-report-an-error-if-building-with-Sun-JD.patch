@@ -1,0 +1,23 @@
+From c653b05da58e7084d4778e7acc817c62b8d766fc Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Sat, 3 Jan 2015 18:49:21 +0100
+Subject: [PATCH 3/3] build: do not report an error if building with Sun JDK
+
+---
+ core/main.mk | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/core/main.mk b/core/main.mk
+index 9d6e233..536b719 100644
+--- a/core/main.mk
++++ b/core/main.mk
+@@ -188,7 +188,6 @@ $(info ************************************************************)
+ $(info You asked for an OpenJDK 7 build but your version is)
+ $(info $(java_version_str).)
+ $(info ************************************************************)
+-$(error stop)
+ endif # java version is not OpenJdk
+ else # if requires_openjdk
+ ifneq ($(shell echo '$(java_version_str)' | grep -i openjdk),)
+-- 
+2.1.0
