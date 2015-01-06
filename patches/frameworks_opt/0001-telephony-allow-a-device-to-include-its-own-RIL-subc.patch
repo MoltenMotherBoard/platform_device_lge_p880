@@ -1,0 +1,28 @@
+From d84a408537555cf8483a8794073da8e963d31d8c Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Tue, 6 Jan 2015 16:01:14 +0100
+Subject: [PATCH] telephony: allow a device to include its own RIL subclass
+
+---
+ Android.mk | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/Android.mk b/Android.mk
+index 449faa0..d312fec 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -25,6 +25,11 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src/java) \
+ 	$(call all-logtags-files-under, src/java)
+ 
+ LOCAL_JAVA_LIBRARIES := voip-common ims-common
++
++ifneq ($(BOARD_RIL_CLASS),)
++LOCAL_SRC_FILES += $(call find-other-java-files,$(BOARD_RIL_CLASS))
++endif
++
+ LOCAL_MODULE_TAGS := optional
+ LOCAL_MODULE := telephony-common
+ 
+-- 
+2.1.0
+
