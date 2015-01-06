@@ -1,0 +1,28 @@
+From 970380153ec8e30c9f2307f000e5cba24f66c9dd Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Sat, 3 Jan 2015 14:09:45 +0100
+Subject: [PATCH 1/2] build: make OUT_DIR an absolute path
+
+---
+ core/envsetup.mk | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/core/envsetup.mk b/core/envsetup.mk
+index 124a91b..62ce78d 100644
+--- a/core/envsetup.mk
++++ b/core/envsetup.mk
+@@ -199,8 +199,12 @@ endif
+ 
+ ifeq (,$(strip $(OUT_DIR)))
+ ifeq (,$(strip $(OUT_DIR_COMMON_BASE)))
++ifneq ($(TOPDIR),)
+ OUT_DIR := $(TOPDIR)out
+ else
++OUT_DIR := $(shell readlink -f .)/out
++endif
++else
+ OUT_DIR := $(OUT_DIR_COMMON_BASE)/$(notdir $(PWD))
+ endif
+ endif
+-- 
+2.1.0
