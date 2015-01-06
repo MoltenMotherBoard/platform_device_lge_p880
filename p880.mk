@@ -173,3 +173,22 @@ $(call inherit-product, frameworks/native/build/phone-xhdpi-1024-dalvik-heap.mk)
 # Use common BCM stuff
 $(call inherit-product-if-exists, hardware/broadcom/wlan/bcmdhd/firmware/bcm4330/device-bcm.mk)
 $(call inherit-product-if-exists, hardware/broadcom/wlan/bcmdhd/config/config-bcm.mk)
+
+# Boot animation
+TARGET_SCREEN_HEIGHT := 1280
+TARGET_SCREEN_WIDTH := 720
+
+# Release name
+PRODUCT_RELEASE_NAME := p880
+
+# Release name and versioning
+PRODUCT_RELEASE_NAME := Optimus 4X HD
+
+# Device identifier. This must come after all inclusions
+PRODUCT_DEVICE := p880
+PRODUCT_NAME := p880
+PRODUCT_BRAND := LG
+PRODUCT_MODEL := LG-P880
+PRODUCT_MANUFACTURER := LGE
+
+PRODUCT_BUILD_PROP_OVERRIDES += PRODUCT_NAME=x3 BUILD_FINGERPRINT="lge/x3/p880:4.4.3/KTU84L/1148727:user/release-keys" PRIVATE_BUILD_DESC="x3-user 4.4.3 KTU84L 1148727 release-keys"
