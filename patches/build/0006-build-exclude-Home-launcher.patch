@@ -1,0 +1,24 @@
+From 9787d4d057b91e615f824049a61ab427bbc464e2 Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Tue, 6 Jan 2015 15:59:24 +0100
+Subject: [PATCH 6/6] build: exclude Home launcher
+
+---
+ target/product/core_base.mk | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/target/product/core_base.mk b/target/product/core_base.mk
+index 6c29482..40f0d9b 100644
+--- a/target/product/core_base.mk
++++ b/target/product/core_base.mk
+@@ -23,7 +23,6 @@ PRODUCT_PROPERTY_OVERRIDES := \
+ PRODUCT_PACKAGES += \
+     ContactsProvider \
+     DefaultContainerService \
+-    Home \
+     TelephonyProvider \
+     UserDictionaryProvider \
+     atrace \
+-- 
+2.1.0
+
