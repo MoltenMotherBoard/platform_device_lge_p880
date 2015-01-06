@@ -1,0 +1,90 @@
+From 69628b89119a954c54d378593e4cde14f7dcf4f6 Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Tue, 6 Jan 2015 20:41:03 +0100
+Subject: [PATCH] telephony: SignalStrength: hotfix GSM and TD-SCDMA Commits:  
+ -
+ https://github.com/Evervolv/android_frameworks_base/commit/7fe68c6e2cac2dd67cce3c5fa0770151b7cf26e0
+  	-
+ https://github.com/Evervolv/android_frameworks_base/commit/d2c39c40b824261fffd25f0a0cf4686c46dd856d
+  	-
+ https://github.com/Evervolv/android_frameworks_base/commit/2297e9a31b9f05ac64f60d11e14d78f4c4e2635f
+  	-
+ https://github.com/Regulusv7/android_frameworks_base/commit/206500094e671a10a9b4088e2207c4ea07f91282
+
+---
+ .../java/android/telephony/SignalStrength.java     | 23 ++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
+
+diff --git a/telephony/java/android/telephony/SignalStrength.java b/telephony/java/android/telephony/SignalStrength.java
+index 3363ca6..63a8c1a 100644
+--- a/telephony/java/android/telephony/SignalStrength.java
++++ b/telephony/java/android/telephony/SignalStrength.java
+@@ -19,6 +19,7 @@ package android.telephony;
+ import android.os.Bundle;
+ import android.os.Parcel;
+ import android.os.Parcelable;
++import android.os.SystemProperties;
+ import android.telephony.Rlog;
+ 
+ /**
+@@ -369,7 +370,7 @@ public class SignalStrength implements Parcelable {
+         mLteSignalStrength = (mLteSignalStrength >= 0) ? mLteSignalStrength : 99;
+         mLteRsrp = ((mLteRsrp >= 44) && (mLteRsrp <= 140)) ? -mLteRsrp : SignalStrength.INVALID;
+         mLteRsrq = ((mLteRsrq >= 3) && (mLteRsrq <= 20)) ? -mLteRsrq : SignalStrength.INVALID;
+-        mLteRssnr = ((mLteRssnr >= -200) && (mLteRssnr <= 300)) ? mLteRssnr
++        mLteRssnr = ((mLteRssnr >= -200) && (mLteRssnr <= 300) && !(mLteRsrq == SignalStrength.INVALID && mLteRssnr == -1)) ? mLteRssnr
+                 : SignalStrength.INVALID;
+         // Cqi no change
+         if (DBG) log("Signal after validate=" + this);
+@@ -462,6 +463,15 @@ public class SignalStrength implements Parcelable {
+         return mLteCqi;
+     }
+ 
++    public boolean needsOldRilFeature(String feature) {
++    String[] features = SystemProperties.get("ro.telephony.ril.v3", "").split(",");
++    for (String found: features) {
++        if (found.equals(feature))
++            return true;
++        }
++            return false;
++    }
++
+     /**
+      * Get signal level as an int from 0..4
+      *
+@@ -471,8 +481,9 @@ public class SignalStrength implements Parcelable {
+         int level;
+ 
+         if (isGsm) {
++            boolean oldRil = needsOldRilFeature("signalstrength");
+             level = getLteLevel();
+-            if (level == SIGNAL_STRENGTH_NONE_OR_UNKNOWN) {
++            if ((level == SIGNAL_STRENGTH_NONE_OR_UNKNOWN && ((getGsmAsuLevel() != 99))) || oldRil) {
+                 level = getGsmLevel();
+             }
+         } else {
+@@ -501,7 +512,9 @@ public class SignalStrength implements Parcelable {
+     public int getAsuLevel() {
+         int asuLevel;
+         if (isGsm) {
+-            if (getLteLevel() == SIGNAL_STRENGTH_NONE_OR_UNKNOWN) {
++            boolean oldRil = needsOldRilFeature("signalstrength");
++            boolean lteChecks = (getLteRsrp() == INVALID && getLteRsrq() == INVALID && getLteRssnr() == INVALID && getLteSignalStrength() == 99);
++            if ((getLteLevel() == SIGNAL_STRENGTH_NONE_OR_UNKNOWN && ( (getGsmAsuLevel() != 99 && lteChecks))) || oldRil) {
+                 asuLevel = getGsmAsuLevel();
+             } else {
+                 asuLevel = getLteAsuLevel();
+@@ -534,7 +547,9 @@ public class SignalStrength implements Parcelable {
+ 
+         if(isGsm()) {
+             dBm = getLteDbm();
+-            if (dBm == INVALID) {
++            boolean oldRil = needsOldRilFeature("signalstrength");
++            boolean lteChecks = (getLteRsrp() == INVALID && getLteRsrq() == INVALID && getLteRssnr() == INVALID && getLteSignalStrength() == 99);
++            if ((getLteLevel() == SIGNAL_STRENGTH_NONE_OR_UNKNOWN && ( (getGsmAsuLevel() != 99 && lteChecks))) || oldRil) {
+                 dBm = getGsmDbm();
+             }
+         } else {
+-- 
+2.1.0
+
