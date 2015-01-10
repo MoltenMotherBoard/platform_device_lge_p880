@@ -1,0 +1,28 @@
+From 616f1d2f9cc46c013ab51911a0b8593d6a231a5d Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Sat, 10 Jan 2015 12:40:28 +0100
+Subject: [PATCH 2/2] binder: add legacy MemoryDealer constructor for Nvidia
+ OMX adaptor
+
+---
+ libs/binder/MemoryDealer.cpp | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/libs/binder/MemoryDealer.cpp b/libs/binder/MemoryDealer.cpp
+index 8739625..72ba5b3 100644
+--- a/libs/binder/MemoryDealer.cpp
++++ b/libs/binder/MemoryDealer.cpp
+@@ -225,6 +225,11 @@ Allocation::~Allocation()
+ 
+ // ----------------------------------------------------------------------------
+ 
++extern "C" void _ZN7android12MemoryDealerC2EjPKcj(void* obj, size_t size, const char* name, uint32_t flags);
++extern "C" void _ZN7android12MemoryDealerC1EjPKc(void* obj, size_t size, const char* name) {
++    _ZN7android12MemoryDealerC2EjPKcj(obj, size, name, 0);
++}
++
+ MemoryDealer::MemoryDealer(size_t size, const char* name, uint32_t flags)
+     : mHeap(new MemoryHeapBase(size, flags, name)),
+     mAllocator(new SimpleBestFitAllocator(size))
+-- 
+2.1.0
