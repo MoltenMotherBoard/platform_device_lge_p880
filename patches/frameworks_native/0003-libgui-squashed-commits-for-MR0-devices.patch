@@ -1,0 +1,88 @@
+From cf2757269705770a6669874af618c46a019535de Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Sun, 11 Jan 2015 20:44:31 +0100
+Subject: [PATCH 3/3] libgui: squashed commits for MR0 devices 	-
+ SurfaceComposerClient: bring back getDisplayWidth, Height & Orientation 
+ - libgui: Add ICS/MR0-compatible client::createSurface constructors
+
+---
+ include/gui/SurfaceComposerClient.h |  4 ++++
+ libs/gui/SurfaceComposerClient.cpp  | 41 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 45 insertions(+)
+
+diff --git a/include/gui/SurfaceComposerClient.h b/include/gui/SurfaceComposerClient.h
+index ce34796..b4c6aba 100644
+--- a/include/gui/SurfaceComposerClient.h
++++ b/include/gui/SurfaceComposerClient.h
+@@ -85,6 +85,10 @@ public:
+     /* Triggers screen on/off or low power mode and waits for it to complete */
+     static void setDisplayPowerMode(const sp<IBinder>& display, int mode);
+ 
++    static ssize_t getDisplayWidth(int32_t displayId);
++    static ssize_t getDisplayHeight(int32_t displayId);
++    static ssize_t getDisplayOrientation(int32_t displayId);
++
+     // ------------------------------------------------------------------------
+     // surface creation / destruction
+ 
+diff --git a/libs/gui/SurfaceComposerClient.cpp b/libs/gui/SurfaceComposerClient.cpp
+index 653db24..9e08ba9 100644
+--- a/libs/gui/SurfaceComposerClient.cpp
++++ b/libs/gui/SurfaceComposerClient.cpp
+@@ -492,6 +492,29 @@ void SurfaceComposerClient::dispose() {
+     mStatus = NO_INIT;
+ }
+ 
++extern "C" sp<SurfaceControl> _ZN7android21SurfaceComposerClient13createSurfaceERKNS_7String8Ejjij(
++        const String8& name,
++        uint32_t w,
++        uint32_t h,
++        PixelFormat format,
++        uint32_t flags);
++extern "C" sp<SurfaceControl> _ZN7android21SurfaceComposerClient13createSurfaceEijjij(
++        uint32_t display,
++        uint32_t w,
++        uint32_t h,
++        PixelFormat format,
++        uint32_t flags)
++{
++    String8 name;
++    const size_t SIZE = 128;
++    char buffer[SIZE];
++    snprintf(buffer, SIZE, "<pid_%d>", getpid());
++    name.append(buffer);
++
++    return _ZN7android21SurfaceComposerClient13createSurfaceERKNS_7String8Ejjij(name,
++            w, h, format, flags);
++}
++
+ sp<SurfaceControl> SurfaceComposerClient::createSurface(
+         const String8& name,
+         uint32_t w,
+@@ -696,6 +719,24 @@ status_t SurfaceComposerClient::getAnimationFrameStats(FrameStats* outStats) {
+     return ComposerService::getComposerService()->getAnimationFrameStats(outStats);
+ }
+ 
++ssize_t SurfaceComposerClient::getDisplayWidth(int32_t displayId) {
++    DisplayInfo info;
++    getDisplayInfo(getBuiltInDisplay(displayId), &info);
++    return info.w;
++}
++
++ssize_t SurfaceComposerClient::getDisplayHeight(int32_t displayId) {
++    DisplayInfo info;
++    getDisplayInfo(getBuiltInDisplay(displayId), &info);
++    return info.h;
++}
++
++ssize_t SurfaceComposerClient::getDisplayOrientation(int32_t displayId) {
++    DisplayInfo info;
++    getDisplayInfo(getBuiltInDisplay(displayId), &info);
++    return info.orientation;
++}
++
+ // ----------------------------------------------------------------------------
+ 
+ status_t ScreenshotClient::capture(
+-- 
+2.1.0
