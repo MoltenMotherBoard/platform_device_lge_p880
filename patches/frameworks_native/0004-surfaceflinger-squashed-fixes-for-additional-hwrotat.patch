@@ -1,0 +1,163 @@
+From d8d7d8fd01f13d80789f1fe9134576c81340d72b Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Mon, 12 Jan 2015 11:50:59 +0100
+Subject: [PATCH 4/4] surfaceflinger: squashed fixes for additional hwrotation
+ Author: Ricardo Cerqueira <cyanogenmod@cerqueira.org> Date: 25.11.2012 12:11
+ AM     surfaceflinger: Reimplement hwrotation
+
+Author: Hashcode <hashcode0f@gmail.com>
+Date: 11.12.2012 1:33 AM
+    surfaceflinger: odd hw rotation (90/270) patch for swapping width/height
+
+    This patch works in addition to the following commit
+    re-implementing ro.sf.hwrotation:
+    https://github.com/CyanogenMod/android_frameworks_native/commit/7d283431efffc4402cb1a6cacf5da64729c883bb
+
+    When using values of 90 and 270 for ro.sf.hwrotation the
+    LCD width and height also need to be swapped to display properly.
+
+    NOTE: This patch does not fix the initial startup of bootanimation
+
+Author: Clyde Tan <bokbokan@yahoo.com>
+Date: 30.12.2013 1:49 AM
+    Fix boot animation rotation problem when ro.sf.hwrotation is set to 90 or 270
+
+Author: Ricardo Cerqueira <cyanogenmod@cerqueira.org>
+Date: 04.01.2014 5:44 AM
+    surfaceflinger: Consolidate display orientation compensation hooks
+
+    Dedupe rotation calculation code and make rotation a statically
+    available property in the DisplayDevice
+
+Conflicts:
+	services/surfaceflinger/DisplayDevice.cpp
+	services/surfaceflinger/SurfaceFlinger.cpp
+---
+ services/surfaceflinger/DisplayDevice.cpp  | 28 +++++++++++++++++++++++++++-
+ services/surfaceflinger/DisplayDevice.h    |  4 +++-
+ services/surfaceflinger/SurfaceFlinger.cpp | 17 +++++++++++++----
+ 3 files changed, 43 insertions(+), 6 deletions(-)
+
+diff --git a/services/surfaceflinger/DisplayDevice.cpp b/services/surfaceflinger/DisplayDevice.cpp
+index 564f974..99d587d 100644
+--- a/services/surfaceflinger/DisplayDevice.cpp
++++ b/services/surfaceflinger/DisplayDevice.cpp
+@@ -72,6 +72,7 @@ DisplayDevice::DisplayDevice(
+       mIsSecure(isSecure),
+       mSecureLayerVisible(false),
+       mLayerStack(NO_LAYER_STACK),
++      mHardwareOrientation(0),
+       mOrientation(),
+       mPowerMode(HWC_POWER_MODE_OFF),
+       mActiveConfig(0)
+@@ -119,7 +120,12 @@ DisplayDevice::DisplayDevice(
+     // was created with createDisplay().
+     switch (mType) {
+         case DISPLAY_PRIMARY:
++            char value[PROPERTY_VALUE_MAX];
+             mDisplayName = "Built-in Screen";
++
++            /* hwrotation applies only to the primary display */
++            property_get("ro.sf.hwrotation", value, "0");
++            mHardwareOrientation = atoi(value);
+             break;
+         case DISPLAY_EXTERNAL:
+             mDisplayName = "HDMI Screen";
+@@ -380,6 +386,18 @@ status_t DisplayDevice::orientationToTransfrom(
+         int orientation, int w, int h, Transform* tr)
+ {
+     uint32_t flags = 0;
++    int additionalRot = this->getHardwareOrientation();
++
++    if (additionalRot) {
++        additionalRot /= 90;
++        if (orientation == DisplayState::eOrientationUnchanged) {
++            orientation = additionalRot;
++        } else {
++            orientation += additionalRot;
++            orientation %= 4;
++        }
++    }
++
+     switch (orientation) {
+     case DisplayState::eOrientationDefault:
+         flags = Transform::ROT_0;
+@@ -435,7 +453,11 @@ void DisplayDevice::setProjection(int orientation,
+     if (!frame.isValid()) {
+         // the destination frame can be invalid if it has never been set,
+         // in that case we assume the whole display frame.
+-        frame = Rect(w, h);
++        if ((mHardwareOrientation/90) & DisplayState::eOrientationSwapMask) {
++            frame = Rect(h, w);
++        } else {
++            frame = Rect(w, h);
++        }
+     }
+ 
+     if (viewport.isEmpty()) {
+@@ -490,6 +512,10 @@ void DisplayDevice::setProjection(int orientation,
+     mFrame = frame;
+ }
+ 
++int DisplayDevice::getHardwareOrientation() {
++    return mHardwareOrientation;
++}
++
+ void DisplayDevice::dump(String8& result) const {
+     const Transform& tr(mGlobalTransform);
+     result.appendFormat(
+diff --git a/services/surfaceflinger/DisplayDevice.h b/services/surfaceflinger/DisplayDevice.h
+index d3f784a..b7846c0 100644
+--- a/services/surfaceflinger/DisplayDevice.h
++++ b/services/surfaceflinger/DisplayDevice.h
+@@ -169,6 +169,7 @@ public:
+      */
+     uint32_t getPageFlipCount() const;
+     void dump(String8& result) const;
++    int getHardwareOrientation();
+ 
+ private:
+     /*
+@@ -209,10 +210,11 @@ private:
+     /*
+      * Transaction state
+      */
+-    static status_t orientationToTransfrom(int orientation,
++    status_t orientationToTransfrom(int orientation,
+             int w, int h, Transform* tr);
+ 
+     uint32_t mLayerStack;
++    int mHardwareOrientation;
+     int mOrientation;
+     // user-provided visible area of the layer stack
+     Rect mViewport;
+diff --git a/services/surfaceflinger/SurfaceFlinger.cpp b/services/surfaceflinger/SurfaceFlinger.cpp
+index 96a8adb..b738b9f 100644
+--- a/services/surfaceflinger/SurfaceFlinger.cpp
++++ b/services/surfaceflinger/SurfaceFlinger.cpp
+@@ -573,10 +573,19 @@ status_t SurfaceFlinger::getDisplayConfigs(const sp<IBinder>& display,
+             info.orientation = 0;
+         }
+ 
+-        info.w = hwConfig.width;
+-        info.h = hwConfig.height;
+-        info.xdpi = xdpi;
+-        info.ydpi = ydpi;
++        int additionalRot = mDisplays[0]->getHardwareOrientation() / 90;
++        if ((type == DisplayDevice::DISPLAY_PRIMARY) && (additionalRot & DisplayState::eOrientationSwapMask)) {
++            info.h = hwConfig.width;
++            info.w = hwConfig.height;
++            info.xdpi = ydpi;
++            info.ydpi = xdpi;
++        }
++        else {
++            info.w = hwConfig.width;
++            info.h = hwConfig.height;
++            info.xdpi = xdpi;
++            info.ydpi = ydpi;
++        }
+         info.fps = float(1e9 / hwConfig.refresh);
+         info.appVsyncOffset = VSYNC_EVENT_PHASE_OFFSET_NS;
+ 
+-- 
+2.1.0
