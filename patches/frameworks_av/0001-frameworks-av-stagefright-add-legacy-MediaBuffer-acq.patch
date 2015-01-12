@@ -1,0 +1,29 @@
+From 1948d6006a36066782a25934c510246f0304f3ad Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Mon, 12 Jan 2015 12:45:07 +0100
+Subject: [PATCH] frameworks/av: stagefright: add legacy
+ MediaBuffer::acquireBuffer symbol
+
+---
+ media/libstagefright/MediaBufferGroup.cpp | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/media/libstagefright/MediaBufferGroup.cpp b/media/libstagefright/MediaBufferGroup.cpp
+index 6ac6d4a..7e71858 100644
+--- a/media/libstagefright/MediaBufferGroup.cpp
++++ b/media/libstagefright/MediaBufferGroup.cpp
+@@ -55,6 +55,11 @@ void MediaBufferGroup::add_buffer(MediaBuffer *buffer) {
+     mLastBuffer = buffer;
+ }
+ 
++extern "C" status_t _ZN7android16MediaBufferGroup14acquire_bufferEPPNS_11MediaBufferE(
++                    MediaBufferGroup* group, MediaBuffer **out) {
++    return group->acquire_buffer(out, false);
++}
++
+ status_t MediaBufferGroup::acquire_buffer(
+         MediaBuffer **out, bool nonBlocking) {
+     Mutex::Autolock autoLock(mLock);
+-- 
+2.1.0
+
