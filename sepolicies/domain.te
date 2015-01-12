@@ -10,7 +10,6 @@ allow zygote { video_device console_device nvhost_writable_device knv_device }:c
 allow installd sdcard_external:dir { search };
 allow installd sdcard_external:file { getattr };
 
-
 # lgdrm
 type lgdrmserver, domain;
 type lgdrmserver_exec, exec_type, file_type;
