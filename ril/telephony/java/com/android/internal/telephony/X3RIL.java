@@ -15,11 +15,7 @@ public class X3RIL extends RIL implements CommandsInterface {
     private boolean sentHwBootstrap = false;
 
     public X3RIL(Context context, int networkMode, int cdmaSubscription, Integer instanceId) {
-        this(context, networkMode, cdmaSubscription);
-    }
-
-    public X3RIL(Context context, int networkMode, int cdmaSubscription) {
-        super(context, networkMode, cdmaSubscription);
+        super(context, networkMode, cdmaSubscription, instanceId);
     }
 
     private static void x3Sleep(int value) {
