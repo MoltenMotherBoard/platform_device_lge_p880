@@ -1,0 +1,108 @@
+From f3147e4af946a19e688b22fa836f39aee4695c95 Mon Sep 17 00:00:00 2001
+From: streambinder <davidepucci@hiddenhost.org>
+Date: Fri, 16 Jan 2015 21:56:18 +0100
+Subject: [PATCH 5/5] frameworks/native: squashed updates Commits: 	- hax:
+ Add back the SURFACE_SKIP_FIRST_DEQUEUE legacy EGL workaround 	 
+ https://github.com/NamelessRom/android_frameworks_native/commit/629deca115c70c3dfafa57041ac46b4f6639c427
+ 	- Compatibility work around for bad graphics driver dependency 	 
+ https://github.com/NamelessRom/android_frameworks_native/commit/e0c499a4a46b303bc27c2040d99bc8db0cc54651
+
+---
+ include/gui/Surface.h               |  2 ++
+ include/gui/SurfaceComposerClient.h |  4 ++++
+ libs/gui/Surface.cpp                | 16 +++++++++++-----
+ libs/gui/SurfaceComposerClient.cpp  |  9 +++++++++
+ 4 files changed, 26 insertions(+), 5 deletions(-)
+
+diff --git a/include/gui/Surface.h b/include/gui/Surface.h
+index f2cf018..cc5540a 100644
+--- a/include/gui/Surface.h
++++ b/include/gui/Surface.h
+@@ -286,6 +286,8 @@ private:
+ 
+     // must be accessed from lock/unlock thread only
+     Region mDirtyRegion;
++
++    bool                        mDequeuedOnce;
+ };
+ 
+ }; // namespace android
+diff --git a/include/gui/SurfaceComposerClient.h b/include/gui/SurfaceComposerClient.h
+index b4c6aba..fec441d 100644
+--- a/include/gui/SurfaceComposerClient.h
++++ b/include/gui/SurfaceComposerClient.h
+@@ -88,6 +88,10 @@ public:
+     static ssize_t getDisplayWidth(int32_t displayId);
+     static ssize_t getDisplayHeight(int32_t displayId);
+     static ssize_t getDisplayOrientation(int32_t displayId);
++    // TODO: Remove me. Do not use.
++    // This is a compatibility shim for one product whose drivers are depending on
++    // this legacy function (when they shouldn't).
++    static status_t getDisplayInfo(int32_t displayId, DisplayInfo* info);
+ 
+     // ------------------------------------------------------------------------
+     // surface creation / destruction
+diff --git a/libs/gui/Surface.cpp b/libs/gui/Surface.cpp
+index 0e2baa2..a0dc067 100644
+--- a/libs/gui/Surface.cpp
++++ b/libs/gui/Surface.cpp
+@@ -77,6 +77,7 @@ Surface::Surface(
+     mConnectedToCpu = false;
+     mProducerControlledByApp = controlledByApp;
+     mSwapIntervalZero = false;
++    mDequeuedOnce = false;
+ }
+ 
+ Surface::~Surface() {
+@@ -255,6 +256,7 @@ int Surface::dequeueBuffer(android_native_buffer_t** buffer, int* fenceFd) {
+     }
+ 
+     *buffer = gbuf.get();
++    if (!mDequeuedOnce) mDequeuedOnce = true;
+     return OK;
+ }
+ 
+@@ -352,12 +354,16 @@ int Surface::query(int what, int* value) const {
+                 }
+                 break;
+             case NATIVE_WINDOW_QUEUES_TO_WINDOW_COMPOSER: {
+-                sp<ISurfaceComposer> composer(
+-                        ComposerService::getComposerService());
+-                if (composer->authenticateSurfaceTexture(mGraphicBufferProducer)) {
+-                    *value = 1;
+-                } else {
++                if (!mDequeuedOnce) {
+                     *value = 0;
++                } else {
++                    sp<ISurfaceComposer> composer(
++                            ComposerService::getComposerService());
++                    if (composer->authenticateSurfaceTexture(mGraphicBufferProducer)) {
++                        *value = 1;
++                    } else {
++                        *value = 0;
++                    }
+                 }
+                 return NO_ERROR;
+             }
+diff --git a/libs/gui/SurfaceComposerClient.cpp b/libs/gui/SurfaceComposerClient.cpp
+index 9e08ba9..729dde2 100644
+--- a/libs/gui/SurfaceComposerClient.cpp
++++ b/libs/gui/SurfaceComposerClient.cpp
+@@ -737,6 +737,15 @@ ssize_t SurfaceComposerClient::getDisplayOrientation(int32_t displayId) {
+     return info.orientation;
+ }
+ 
++// TODO: Remove me. Do not use.
++// This is a compatibility shim for one product whose drivers are depending on
++// this legacy function (when they shouldn't).
++status_t SurfaceComposerClient::getDisplayInfo(
++        int32_t displayId, DisplayInfo* info)
++{
++    return getDisplayInfo(getBuiltInDisplay(displayId), info);
++}
++
+ // ----------------------------------------------------------------------------
+ 
+ status_t ScreenshotClient::capture(
+-- 
+2.1.0
