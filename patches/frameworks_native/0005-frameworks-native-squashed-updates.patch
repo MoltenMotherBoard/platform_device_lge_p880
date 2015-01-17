@@ -1,11 +1,7 @@
 From f3147e4af946a19e688b22fa836f39aee4695c95 Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
 Date: Fri, 16 Jan 2015 21:56:18 +0100
-Subject: [PATCH 5/5] frameworks/native: squashed updates Commits: 	- hax:
- Add back the SURFACE_SKIP_FIRST_DEQUEUE legacy EGL workaround 	 
- https://github.com/NamelessRom/android_frameworks_native/commit/629deca115c70c3dfafa57041ac46b4f6639c427
- 	- Compatibility work around for bad graphics driver dependency 	 
- https://github.com/NamelessRom/android_frameworks_native/commit/e0c499a4a46b303bc27c2040d99bc8db0cc54651
+Subject: [PATCH 5/5] frameworks/native: squashed updates
 
 ---
  include/gui/Surface.h               |  2 ++

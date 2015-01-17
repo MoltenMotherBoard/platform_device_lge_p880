@@ -1,9 +1,7 @@
 From 0b1760afdc0f4eac70340753b728654c0d18e045 Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
 Date: Sat, 17 Jan 2015 09:25:46 +0100
-Subject: [PATCH 6/6] ota: remove cruft Skip the date check (downgrade to your
- content), and don't include recovery in otapackages. 5.0.0 update: We want
- the recovery patchstuff back
+Subject: [PATCH 6/6] ota: remove cruft
 
 ---
  tools/releasetools/ota_from_target_files | 7 +------

@@ -2,36 +2,7 @@ From d8d7d8fd01f13d80789f1fe9134576c81340d72b Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
 Date: Mon, 12 Jan 2015 11:50:59 +0100
 Subject: [PATCH 4/4] surfaceflinger: squashed fixes for additional hwrotation
- Author: Ricardo Cerqueira <cyanogenmod@cerqueira.org> Date: 25.11.2012 12:11
- AM     surfaceflinger: Reimplement hwrotation
 
-Author: Hashcode <hashcode0f@gmail.com>
-Date: 11.12.2012 1:33 AM
-    surfaceflinger: odd hw rotation (90/270) patch for swapping width/height
-
-    This patch works in addition to the following commit
-    re-implementing ro.sf.hwrotation:
-    https://github.com/CyanogenMod/android_frameworks_native/commit/7d283431efffc4402cb1a6cacf5da64729c883bb
-
-    When using values of 90 and 270 for ro.sf.hwrotation the
-    LCD width and height also need to be swapped to display properly.
-
-    NOTE: This patch does not fix the initial startup of bootanimation
-
-Author: Clyde Tan <bokbokan@yahoo.com>
-Date: 30.12.2013 1:49 AM
-    Fix boot animation rotation problem when ro.sf.hwrotation is set to 90 or 270
-
-Author: Ricardo Cerqueira <cyanogenmod@cerqueira.org>
-Date: 04.01.2014 5:44 AM
-    surfaceflinger: Consolidate display orientation compensation hooks
-
-    Dedupe rotation calculation code and make rotation a statically
-    available property in the DisplayDevice
-
-Conflicts:
-	services/surfaceflinger/DisplayDevice.cpp
-	services/surfaceflinger/SurfaceFlinger.cpp
 ---
  services/surfaceflinger/DisplayDevice.cpp  | 28 +++++++++++++++++++++++++++-
  services/surfaceflinger/DisplayDevice.h    |  4 +++-

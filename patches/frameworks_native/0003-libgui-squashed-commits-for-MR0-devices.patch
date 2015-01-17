@@ -1,9 +1,7 @@
 From cf2757269705770a6669874af618c46a019535de Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
 Date: Sun, 11 Jan 2015 20:44:31 +0100
-Subject: [PATCH 3/3] libgui: squashed commits for MR0 devices 	-
- SurfaceComposerClient: bring back getDisplayWidth, Height & Orientation 
- - libgui: Add ICS/MR0-compatible client::createSurface constructors
+Subject: [PATCH 3/3] libgui: squashed commits for MR0 devices
 
 ---
  include/gui/SurfaceComposerClient.h |  4 ++++

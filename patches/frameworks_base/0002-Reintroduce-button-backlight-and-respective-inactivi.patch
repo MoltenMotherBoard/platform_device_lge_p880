@@ -2,13 +2,8 @@ From 7362eeab3f8e2504d2119529417e94301d3e9fdb Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
 Date: Thu, 8 Jan 2015 20:42:27 +0100
 Subject: [PATCH 2/2] Reintroduce button-backlight (and respective inactivity
- timeout) The power manager rewrite from Change
- I1d7a52e98f0449f76d70bf421f6a7f245957d1d7 completely removed support for
- control of the button backlights, which makes all capacitive buttons out
- there stay dark. The commit message in that change mentions it hasn't been
- implemented _yet_, so this fix should be temporary until upstream does their
- own implementation
-
+ timeout)
+ 
 ---
  .../com/android/server/display/DisplayPowerController.java     |  2 ++
  .../java/com/android/server/power/PowerManagerService.java     | 10 ++++++++++

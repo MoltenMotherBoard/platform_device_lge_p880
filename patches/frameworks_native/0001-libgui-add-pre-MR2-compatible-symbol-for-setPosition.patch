@@ -2,10 +2,7 @@ From f04c7e0e487a229af9af9b53cc4df511358a1178 Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
 Date: Thu, 8 Jan 2015 20:49:20 +0100
 Subject: [PATCH] libgui: add pre-MR2-compatible symbol for setPosition and
- setOrientation SurfaceControl::setPosition now takes floats instead of
- integers as arguments, which breaks linkability from pre-MR2 blobs. Add a
- direct compatibility wrapper, since the values are treated in the same way.
- In setOrientation, this is needed for some tegra ICS and JB_MR0 prebuilts.
+ setOrientation
 
 ---
  include/gui/SurfaceComposerClient.h |  2 ++

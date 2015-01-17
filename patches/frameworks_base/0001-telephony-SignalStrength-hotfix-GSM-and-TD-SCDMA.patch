@@ -1,15 +1,7 @@
 From 69628b89119a954c54d378593e4cde14f7dcf4f6 Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
 Date: Tue, 6 Jan 2015 20:41:03 +0100
-Subject: [PATCH] telephony: SignalStrength: hotfix GSM and TD-SCDMA Commits:  
- -
- https://github.com/Evervolv/android_frameworks_base/commit/7fe68c6e2cac2dd67cce3c5fa0770151b7cf26e0
-  	-
- https://github.com/Evervolv/android_frameworks_base/commit/d2c39c40b824261fffd25f0a0cf4686c46dd856d
-  	-
- https://github.com/Evervolv/android_frameworks_base/commit/2297e9a31b9f05ac64f60d11e14d78f4c4e2635f
-  	-
- https://github.com/Regulusv7/android_frameworks_base/commit/206500094e671a10a9b4088e2207c4ea07f91282
+Subject: [PATCH] telephony: SignalStrength: hotfix GSM and TD-SCDMA
 
 ---
  .../java/android/telephony/SignalStrength.java     | 23 ++++++++++++++++++----
