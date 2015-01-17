@@ -12,6 +12,6 @@ for i in $(find "$PATCHBASE"/* -type d); do
         if [ -d "$CMBASE/$PATCHTARGET" ]; then break; fi
     done
     echo "[ $PATCHTARGET ]"
-	rm -rf "$CMBASE/$PATCHTARGET"
-	repo sync "$CMBASE/$PATCHTARGET"
+    rm -rf "$CMBASE/$PATCHTARGET"
+    repo sync "$CMBASE/$PATCHTARGET"
 done
