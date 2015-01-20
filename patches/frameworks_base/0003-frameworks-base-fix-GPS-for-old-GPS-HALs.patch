@@ -1,10 +1,7 @@
 From 0bfa9e1cfc8b25912e212197c96f066ae23d13ed Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
 Date: Sun, 11 Jan 2015 19:25:25 +0100
-Subject: [PATCH 3/3] frameworks/base: fix GPS for old GPS HALs Some old GPS
- HALs like the one on the Optimus 4x HD are broken without this and can also
- cause bootloops (like on the 4x HD). To enable this just add the following to
- your config.xml overlay: 	<bool name="config_legacyGpsHAL">true</bool>
+Subject: [PATCH 3/3] frameworks/base: fix GPS for old GPS HALs
 
 ---
  core/res/res/values/config.xml                                 |  3 +++
