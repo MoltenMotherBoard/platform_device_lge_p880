@@ -11,6 +11,7 @@ for i in $(find "$PATCHBASE"/* -type d); do
         PATCHTARGET=$(echo $PATCHTARGET | sed 's/_/\//')
         if [ -d "$CMBASE/$PATCHTARGET" ]; then break; fi
     done
+    echo
     echo "[ $PATCHTARGET ]"
     cd "$CMBASE/$PATCHTARGET" || exit 1
     git am -3 "$PATCHBASE/$PATCHNAME"/* || exit 1
