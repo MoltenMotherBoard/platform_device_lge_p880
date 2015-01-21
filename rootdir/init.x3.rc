@@ -352,6 +352,8 @@ on boot
     chown system system /sys/power/lge_logstart
     chmod 0660 /sys/power/lge_logstart
 
+    setprop net.rmmod.svc_done 1
+
 service lgsecclk /system/bin/lgsecclkserver
     class main
     user system
