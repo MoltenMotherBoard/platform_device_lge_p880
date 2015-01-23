@@ -147,7 +147,6 @@ BOARD_SEPOLICY_UNION += \
     device.te \
     domain.te \
     drmserver.te \
-    init.te \
     init_shell.te \
     file.te \
     gpsd.te \

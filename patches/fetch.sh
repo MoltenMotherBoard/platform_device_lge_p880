@@ -11,7 +11,6 @@ for i in $(find "$PATCHBASE"/* -type d); do
         PATCHTARGET=$(echo $PATCHTARGET | sed 's/_/\//')
         if [ -d "$CMBASE/$PATCHTARGET" ]; then break; fi
     done
-    echo
     echo "[ $PATCHTARGET ]"
     rm -rf "$CMBASE/$PATCHTARGET"
     repo sync "$CMBASE/$PATCHTARGET"
