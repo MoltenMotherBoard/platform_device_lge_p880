@@ -1,38 +1,39 @@
-From 7362eeab3f8e2504d2119529417e94301d3e9fdb Mon Sep 17 00:00:00 2001
+From ee24a7dbff71e95ec3d58b10456e87849e77c0ce Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
-Date: Thu, 8 Jan 2015 20:42:27 +0100
-Subject: [PATCH 2/2] Reintroduce button-backlight (and respective inactivity
+Date: Thu, 12 Mar 2015 17:09:59 +0100
+Subject: [PATCH 2/3] Reintroduce button-backlight (and respective inactivity
  timeout)
- 
+
 ---
  .../com/android/server/display/DisplayPowerController.java     |  2 ++
  .../java/com/android/server/power/PowerManagerService.java     | 10 ++++++++++
  2 files changed, 12 insertions(+)
 
 diff --git a/services/core/java/com/android/server/display/DisplayPowerController.java b/services/core/java/com/android/server/display/DisplayPowerController.java
-index 2d5b99e..4e1c369 100644
+index 78610ff..49cc524 100644
 --- a/services/core/java/com/android/server/display/DisplayPowerController.java
 +++ b/services/core/java/com/android/server/display/DisplayPowerController.java
-@@ -572,12 +572,14 @@ final class DisplayPowerController implements AutomaticBrightnessController.Call
+@@ -584,6 +584,7 @@ final class DisplayPowerController implements AutomaticBrightnessController.Call
          // Use zero brightness when screen is off.
          if (state == Display.STATE_OFF) {
              brightness = PowerManager.BRIGHTNESS_OFF;
 +            mLights.getLight(LightsManager.LIGHT_ID_BUTTONS).setBrightness(brightness);
          }
  
-         // Use default brightness when dozing unless overridden.
+         // Configure auto-brightness.
+@@ -632,6 +633,7 @@ final class DisplayPowerController implements AutomaticBrightnessController.Call
          if (brightness < 0 && (state == Display.STATE_DOZE
                  || state == Display.STATE_DOZE_SUSPEND)) {
              brightness = mScreenBrightnessDozeConfig;
 +            mLights.getLight(LightsManager.LIGHT_ID_BUTTONS).setBrightness(PowerManager.BRIGHTNESS_OFF);
          }
  
-         // Configure auto-brightness.
+         // Apply manual brightness.
 diff --git a/services/core/java/com/android/server/power/PowerManagerService.java b/services/core/java/com/android/server/power/PowerManagerService.java
-index 52807c0..7dbd384 100644
+index 9786b42..f1b00b0 100644
 --- a/services/core/java/com/android/server/power/PowerManagerService.java
 +++ b/services/core/java/com/android/server/power/PowerManagerService.java
-@@ -153,6 +153,8 @@ public final class PowerManagerService extends SystemService
+@@ -148,6 +148,8 @@ public final class PowerManagerService extends SystemService
      private static final int POWER_HINT_INTERACTION = 2;
      private static final int POWER_HINT_LOW_POWER = 5;
  
@@ -41,7 +42,7 @@ index 52807c0..7dbd384 100644
      private final Context mContext;
      private final ServiceThread mHandlerThread;
      private final PowerManagerHandler mHandler;
-@@ -168,6 +170,7 @@ public final class PowerManagerService extends SystemService
+@@ -163,6 +165,7 @@ public final class PowerManagerService extends SystemService
      private SettingsObserver mSettingsObserver;
      private DreamManagerInternal mDreamManager;
      private Light mAttentionLight;
@@ -49,7 +50,7 @@ index 52807c0..7dbd384 100644
  
      private final Object mLock = new Object();
  
-@@ -509,6 +512,7 @@ public final class PowerManagerService extends SystemService
+@@ -510,6 +513,7 @@ public final class PowerManagerService extends SystemService
  
              mLightsManager = getLocalService(LightsManager.class);
              mAttentionLight = mLightsManager.getLight(LightsManager.LIGHT_ID_ATTENTION);
@@ -57,7 +58,7 @@ index 52807c0..7dbd384 100644
  
              // Initialize display power management.
              mDisplayManagerInternal.initPowerManagement(
-@@ -1450,6 +1454,12 @@ public final class PowerManagerService extends SystemService
+@@ -1457,6 +1461,12 @@ public final class PowerManagerService extends SystemService
                      nextTimeout = mLastUserActivityTime
                              + screenOffTimeout - screenDimDuration;
                      if (now < nextTimeout) {
@@ -72,3 +73,4 @@ index 52807c0..7dbd384 100644
                          nextTimeout = mLastUserActivityTime + screenOffTimeout;
 -- 
 2.1.0
+

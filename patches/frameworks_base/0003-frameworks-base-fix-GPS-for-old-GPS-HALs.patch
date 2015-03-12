@@ -1,78 +1,88 @@
-From 0bfa9e1cfc8b25912e212197c96f066ae23d13ed Mon Sep 17 00:00:00 2001
+From 3215dc3758cb438473ff18a22ca615b542697c28 Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
-Date: Sun, 11 Jan 2015 19:25:25 +0100
-Subject: [PATCH 3/3] frameworks/base: fix GPS for old GPS HALs Some old GPS
- HALs like the one on the Optimus 4x HD are broken without this and can also
- cause bootloops (like on the 4x HD). To enable this just add the following to
- your config.xml overlay: 	<bool name="config_legacyGpsHAL">true</bool>
+Date: Thu, 12 Mar 2015 17:15:24 +0100
+Subject: [PATCH 3/3] frameworks/base: fix GPS for old GPS HALs
 
 ---
- core/res/res/values/config.xml                                 |  3 +++
- core/res/res/values/symbols.xml                                |  1 +
- .../java/com/android/server/location/GpsLocationProvider.java  | 10 +++++++++-
- 3 files changed, 13 insertions(+), 1 deletion(-)
+ core/res/res/values/config.xml                             |  3 +++
+ core/res/res/values/symbols.xml                            |  1 +
+ .../com/android/server/location/GpsLocationProvider.java   | 14 +++++++++++++-
+ 3 files changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/core/res/res/values/config.xml b/core/res/res/values/config.xml
-index 8006659..0b4d15d 100644
+index 68df6f1..3db0863 100755
 --- a/core/res/res/values/config.xml
 +++ b/core/res/res/values/config.xml
-@@ -1807,6 +1807,9 @@
+@@ -1924,6 +1924,9 @@
          <item>SUPL_MODE=1</item>
      </string-array>
  
 +    <!-- Enable support for legacy GPS HALs -->
-+	<bool name="config_legacyGpsHAL">false</bool>
++    <bool name="config_legacyGpsHAL">false</bool>
 +
      <!-- If there is no preload VM number in the sim card, carriers such as
           Verizon require to load a default vm number from the configurantion.
           Define config_default_vm_number for this purpose. And there are two
 diff --git a/core/res/res/values/symbols.xml b/core/res/res/values/symbols.xml
-index 3078722..d56dcd6 100644
+index 1055547..b502ff2 100755
 --- a/core/res/res/values/symbols.xml
 +++ b/core/res/res/values/symbols.xml
-@@ -371,6 +371,7 @@
-   <java-symbol type="integer" name="config_valid_wappush_index" />
-   <java-symbol type="integer" name="config_overrideHasPermanentMenuKey" />
-   <java-symbol type="bool" name="config_hasPermanentDpad" />
+@@ -301,6 +301,7 @@
+   <java-symbol type="bool" name="config_wifi_only_link_same_credential_configurations" />
+   <java-symbol type="bool" name="config_wifi_enable_disconnection_debounce" />
+   <java-symbol type="bool" name="config_wifi_enable_5GHz_preference" />
 +  <java-symbol type="bool" name="config_legacyGpsHAL" />
- 
-   <java-symbol type="color" name="tab_indicator_text_v4" />
- 
+   <java-symbol type="integer" name="config_wifi_framework_5GHz_preference_boost_threshold" />
+   <java-symbol type="integer" name="config_wifi_framework_5GHz_preference_boost_factor" />
+   <java-symbol type="integer" name="config_wifi_framework_5GHz_preference_penalty_threshold" />
 diff --git a/services/core/java/com/android/server/location/GpsLocationProvider.java b/services/core/java/com/android/server/location/GpsLocationProvider.java
-index 0198e46..2515e6c 100644
+index 5ae6300..72c532f 100644
 --- a/services/core/java/com/android/server/location/GpsLocationProvider.java
 +++ b/services/core/java/com/android/server/location/GpsLocationProvider.java
-@@ -373,6 +373,9 @@ public class GpsLocationProvider implements LocationProviderInterface {
+@@ -292,6 +292,9 @@ public class GpsLocationProvider implements LocationProviderInterface {
+     // true if we have network connectivity
+     private boolean mNetworkAvailable;
+ 
++    // true once the device has booted, only used on old GPS HALs
++    private boolean mFirstBoot = false;
++
+     // states for injecting ntp and downloading xtra data
+     private static final int STATE_PENDING_NETWORK = 0;
+     private static final int STATE_DOWNLOADING = 1;
+@@ -369,6 +372,9 @@ public class GpsLocationProvider implements LocationProviderInterface {
      private final ConnectivityManager mConnMgr;
      private final GpsNetInitiatedHandler mNIHandler;
  
 +    // true for old GPS HALs
-+    private boolean mLegacyGpsHAL = false;
++	private boolean mLegacyGpsHAL = false;
 +
      // Wakelocks
      private final static String WAKELOCK_KEY = "GpsLocationProvider";
      private final PowerManager.WakeLock mWakeLock;
-@@ -658,6 +661,10 @@ public class GpsLocationProvider implements LocationProviderInterface {
+@@ -631,6 +637,10 @@ public class GpsLocationProvider implements LocationProviderInterface {
          mBatteryStats = IBatteryStats.Stub.asInterface(ServiceManager.getService(
                  BatteryStats.SERVICE_NAME));
  
 +        // Check if we have a legacy GPS HAL
 +		mLegacyGpsHAL = mContext.getResources().getBoolean(
-+			com.android.internal.R.bool.config_legacyGpsHAL);
++    			com.android.internal.R.bool.config_legacyGpsHAL);
 +
          // Load GPS configuration.
          mProperties = new Properties();
          reloadGpsProperties(mContext, mProperties);
-@@ -938,7 +945,8 @@ public class GpsLocationProvider implements LocationProviderInterface {
+@@ -972,9 +982,11 @@ public class GpsLocationProvider implements LocationProviderInterface {
          }
          if (mSuplServerHost != null
                  && mSuplServerPort > TCP_MIN_PORT
 -                && mSuplServerPort <= TCP_MAX_PORT) {
 +                && mSuplServerPort <= TCP_MAX_PORT
-+                && !mLegacyGpsHAL) {                
++                && (!mLegacyGpsHAL || mFirstBoot)) {
              native_set_agps_server(AGPS_TYPE_SUPL, mSuplServerHost, mSuplServerPort);
          }
++        mFirstBoot = true;
      }
+ 
+     /**
 -- 
 2.1.0
 

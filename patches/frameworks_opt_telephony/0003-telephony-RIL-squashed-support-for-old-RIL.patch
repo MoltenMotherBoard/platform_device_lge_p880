@@ -1,34 +1,36 @@
-From 140cbdd72bf21b96b6d1227aab770d33414b0b57 Mon Sep 17 00:00:00 2001
+From 54be9bf4e082667c11cc9997f79af3d33fd8828c Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
-Date: Tue, 6 Jan 2015 17:32:30 +0100
+Date: Thu, 12 Mar 2015 18:09:45 +0100
 Subject: [PATCH 3/3] telephony: RIL: squashed support for old RIL
 
 ---
  .../internal/telephony/CommandsInterface.java      |   6 +
- src/java/com/android/internal/telephony/RIL.java   | 186 +++++++++++++++++----
+ src/java/com/android/internal/telephony/RIL.java   | 187 +++++++++++++++++----
  .../telephony/dataconnection/DataCallResponse.java |   2 +-
  .../imsphone/ImsPhoneCommandInterface.java         |   2 +
  .../telephony/sip/SipCommandInterface.java         |   2 +
  .../internal/telephony/test/SimulatedCommands.java |   2 +
- 6 files changed, 170 insertions(+), 30 deletions(-)
+ 6 files changed, 170 insertions(+), 31 deletions(-)
 
 diff --git a/src/java/com/android/internal/telephony/CommandsInterface.java b/src/java/com/android/internal/telephony/CommandsInterface.java
-index ea34c8c..8f0b557 100644
+index 42b0338..1518871 100644
 --- a/src/java/com/android/internal/telephony/CommandsInterface.java
 +++ b/src/java/com/android/internal/telephony/CommandsInterface.java
-@@ -1904,4 +1904,10 @@ public interface CommandsInterface {
-      * @param result Callback message contains the information of SUCCESS/FAILURE
-      */
+@@ -1940,6 +1940,12 @@ public interface CommandsInterface {
      public void requestShutdown(Message result);
-+    
-+    /**
+ 
+     /**
 +     * @hide
 +     * CM-specific: Ask the RIL about the presence of back-compat flags
 +     */
 +    public boolean needsOldRilFeature(String feature);
- }
++
++    /**
+      *  Set phone radio type and access technology.
+      *
+      *  @param rc the phone radio capability defined in
 diff --git a/src/java/com/android/internal/telephony/RIL.java b/src/java/com/android/internal/telephony/RIL.java
-index bd4eb4b..f75e205 100644
+index d767028..8fecb95 100644
 --- a/src/java/com/android/internal/telephony/RIL.java
 +++ b/src/java/com/android/internal/telephony/RIL.java
 @@ -29,6 +29,7 @@ import android.content.BroadcastReceiver;
@@ -39,7 +41,7 @@ index bd4eb4b..f75e205 100644
  import android.hardware.display.DisplayManager;
  import android.net.ConnectivityManager;
  import android.net.LocalSocket;
-@@ -254,6 +255,11 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -258,6 +259,11 @@ public class RIL extends BaseCommands implements CommandsInterface {
  
      private Integer mInstanceId;
  
@@ -51,9 +53,9 @@ index bd4eb4b..f75e205 100644
      //***** Events
  
      static final int EVENT_SEND                 = 1;
-@@ -532,6 +538,20 @@ public class RIL extends BaseCommands implements CommandsInterface {
-                 mSocket = s;
-                 Rlog.i(RILJ_LOG_TAG, "Connected to '" + rilSocket + "' socket");
+@@ -537,6 +543,20 @@ public class RIL extends BaseCommands implements CommandsInterface {
+                 Rlog.i(RILJ_LOG_TAG, "(" + mInstanceId + ") Connected to '"
+                         + rilSocket + "' socket");
  
 +                /* Compatibility with qcom's DSDS (Dual SIM) stack */
 +                if (needsOldRilFeature("qcomdsds")) {
@@ -72,7 +74,7 @@ index bd4eb4b..f75e205 100644
                  int length = 0;
                  try {
                      InputStream is = mSocket.getInputStream();
-@@ -728,9 +748,13 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -732,9 +752,13 @@ public class RIL extends BaseCommands implements CommandsInterface {
  
          if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
  
@@ -88,7 +90,7 @@ index bd4eb4b..f75e205 100644
  
          send(rr);
      }
-@@ -748,10 +772,14 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -752,10 +776,14 @@ public class RIL extends BaseCommands implements CommandsInterface {
  
          if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
  
@@ -105,7 +107,7 @@ index bd4eb4b..f75e205 100644
  
          send(rr);
      }
-@@ -769,9 +797,13 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -773,9 +801,13 @@ public class RIL extends BaseCommands implements CommandsInterface {
  
          if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
  
@@ -121,7 +123,7 @@ index bd4eb4b..f75e205 100644
  
          send(rr);
      }
-@@ -789,10 +821,14 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -793,10 +825,14 @@ public class RIL extends BaseCommands implements CommandsInterface {
  
          if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
  
@@ -138,7 +140,7 @@ index bd4eb4b..f75e205 100644
  
          send(rr);
      }
-@@ -810,10 +846,14 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -814,10 +850,14 @@ public class RIL extends BaseCommands implements CommandsInterface {
  
          if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
  
@@ -155,7 +157,7 @@ index bd4eb4b..f75e205 100644
  
          send(rr);
      }
-@@ -831,10 +871,14 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -835,10 +875,14 @@ public class RIL extends BaseCommands implements CommandsInterface {
  
          if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
  
@@ -172,7 +174,7 @@ index bd4eb4b..f75e205 100644
  
          send(rr);
      }
-@@ -932,8 +976,16 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -936,8 +980,16 @@ public class RIL extends BaseCommands implements CommandsInterface {
      getIMSIForApp(String aid, Message result) {
          RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_IMSI, result);
  
@@ -191,7 +193,7 @@ index bd4eb4b..f75e205 100644
  
          if (RILJ_LOGD) riljLog(rr.serialString() +
                                "> getIMSI: " + requestToString(rr.mRequest)
-@@ -1814,18 +1866,20 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -1818,18 +1870,20 @@ public class RIL extends BaseCommands implements CommandsInterface {
                              Message response) {
          RILRequest rr = RILRequest.obtain(RIL_REQUEST_QUERY_FACILITY_LOCK, response);
  
@@ -217,7 +219,7 @@ index bd4eb4b..f75e205 100644
  
          send(rr);
      }
-@@ -1849,15 +1903,19 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -1853,15 +1907,19 @@ public class RIL extends BaseCommands implements CommandsInterface {
                                                          + " [" + facility + " " + lockState
                                                          + " " + serviceClass + " " + appId + "]");
  
@@ -239,7 +241,7 @@ index bd4eb4b..f75e205 100644
  
          send(rr);
  
-@@ -2249,6 +2307,14 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -2253,6 +2311,14 @@ public class RIL extends BaseCommands implements CommandsInterface {
          switch(stateInt) {
              case 0: state = RadioState.RADIO_OFF; break;
              case 1: state = RadioState.RADIO_UNAVAILABLE; break;
@@ -254,7 +256,7 @@ index bd4eb4b..f75e205 100644
              case 10: state = RadioState.RADIO_ON; break;
  
              default:
-@@ -2881,6 +2947,10 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -2891,6 +2957,10 @@ public class RIL extends BaseCommands implements CommandsInterface {
              case RIL_UNSOL_DATA_CALL_LIST_CHANGED:
                  if (RILJ_LOGD) unsljLogRet(response, ret);
  
@@ -265,7 +267,7 @@ index bd4eb4b..f75e205 100644
                  mDataNetworkStateRegistrants.notifyRegistrants(new AsyncResult(null, ret, null));
              break;
  
-@@ -3311,16 +3381,31 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -3364,16 +3434,31 @@ public class RIL extends BaseCommands implements CommandsInterface {
          return new IccIoResult(sw1, sw2, android.util.Base64.decode(s, android.util.Base64.DEFAULT));
      }
  
@@ -298,7 +300,7 @@ index bd4eb4b..f75e205 100644
          int numApplications = p.readInt();
  
          // limit to maximum allowed applications
-@@ -3328,6 +3413,7 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -3381,6 +3466,7 @@ public class RIL extends BaseCommands implements CommandsInterface {
              numApplications = IccCardStatus.CARD_MAX_APPS;
          }
          cardStatus.mApplications = new IccCardApplicationStatus[numApplications];
@@ -306,7 +308,7 @@ index bd4eb4b..f75e205 100644
          for (int i = 0 ; i < numApplications ; i++) {
              appStatus = new IccCardApplicationStatus();
              appStatus.app_type       = appStatus.AppTypeFromRILInt(p.readInt());
-@@ -3439,13 +3525,21 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -3492,13 +3578,21 @@ public class RIL extends BaseCommands implements CommandsInterface {
              dataCall.cid = p.readInt();
              dataCall.active = p.readInt();
              dataCall.type = p.readString();
@@ -329,17 +331,18 @@ index bd4eb4b..f75e205 100644
              dataCall.cid = p.readInt();
              dataCall.active = p.readInt();
              dataCall.type = p.readString();
-@@ -3483,7 +3577,8 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -3535,8 +3629,8 @@ public class RIL extends BaseCommands implements CommandsInterface {
+     protected Object
      responseDataCallList(Parcel p) {
          ArrayList<DataCallResponse> response;
- 
+-
 -        int ver = p.readInt();
 +        boolean oldRil = needsOldRilFeature("datacall");
 +        int ver = (oldRil ? 3 : p.readInt());
          int num = p.readInt();
          riljLog("responseDataCallList ver=" + ver + " num=" + num);
  
-@@ -3497,7 +3592,8 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -3550,7 +3644,8 @@ public class RIL extends BaseCommands implements CommandsInterface {
  
      protected Object
      responseSetupDataCall(Parcel p) {
@@ -349,7 +352,7 @@ index bd4eb4b..f75e205 100644
          int num = p.readInt();
          if (RILJ_LOGV) riljLog("responseSetupDataCall ver=" + ver + " num=" + num);
  
-@@ -3554,15 +3650,15 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -3607,15 +3702,15 @@ public class RIL extends BaseCommands implements CommandsInterface {
          String strings[] = (String [])responseStrings(p);
          ArrayList<OperatorInfo> ret;
  
@@ -369,7 +372,7 @@ index bd4eb4b..f75e205 100644
              ret.add (
                  new OperatorInfo(
                      strings[i+0],
-@@ -4402,6 +4498,16 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -4508,6 +4603,16 @@ public class RIL extends BaseCommands implements CommandsInterface {
       */
      @Override
      public void iccOpenLogicalChannel(String AID, Message response) {
@@ -386,7 +389,7 @@ index bd4eb4b..f75e205 100644
          RILRequest rr = RILRequest.obtain(RIL_REQUEST_SIM_OPEN_CHANNEL, response);
          rr.mParcel.writeString(AID);
  
-@@ -4432,6 +4538,17 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -4538,6 +4643,17 @@ public class RIL extends BaseCommands implements CommandsInterface {
      @Override
      public void iccTransmitApduLogicalChannel(int channel, int cla, int instruction,
              int p1, int p2, int p3, String data, Message response) {
@@ -404,7 +407,7 @@ index bd4eb4b..f75e205 100644
          if (channel <= 0) {
              throw new RuntimeException(
                  "Invalid channel in iccTransmitApduLogicalChannel: " + channel);
-@@ -4456,6 +4573,17 @@ public class RIL extends BaseCommands implements CommandsInterface {
+@@ -4562,6 +4678,17 @@ public class RIL extends BaseCommands implements CommandsInterface {
       */
      private void iccTransmitApduHelper(int rilCommand, int channel, int cla,
              int instruction, int p1, int p2, int p3, String data, Message response) {
@@ -436,16 +439,18 @@ index 51adce3..ccae8d9 100644
                              addrPrefixLen = 0;
                          }
 diff --git a/src/java/com/android/internal/telephony/imsphone/ImsPhoneCommandInterface.java b/src/java/com/android/internal/telephony/imsphone/ImsPhoneCommandInterface.java
-index 6f8f81d..66bbaf3 100644
+index cd0920b..559e1af 100644
 --- a/src/java/com/android/internal/telephony/imsphone/ImsPhoneCommandInterface.java
 +++ b/src/java/com/android/internal/telephony/imsphone/ImsPhoneCommandInterface.java
-@@ -599,4 +599,6 @@ class ImsPhoneCommandInterface extends BaseCommands implements CommandsInterface
-     @Override
+@@ -601,6 +601,8 @@ class ImsPhoneCommandInterface extends BaseCommands implements CommandsInterface
      public void requestShutdown(Message result) {
      }
-+
+ 
 +    public boolean needsOldRilFeature(String feature) { return false; }
- }
++
+     @Override
+     public void setRadioCapability(RadioCapability rc, Message response) {
+     }
 diff --git a/src/java/com/android/internal/telephony/sip/SipCommandInterface.java b/src/java/com/android/internal/telephony/sip/SipCommandInterface.java
 index 889cc8f..cfbc403 100644
 --- a/src/java/com/android/internal/telephony/sip/SipCommandInterface.java
@@ -458,10 +463,10 @@ index 889cc8f..cfbc403 100644
 +    public boolean needsOldRilFeature(String feature) { return false; }
  }
 diff --git a/src/java/com/android/internal/telephony/test/SimulatedCommands.java b/src/java/com/android/internal/telephony/test/SimulatedCommands.java
-index dd0ae43..2f44aec 100644
+index 71fd66e..3ac0a23 100644
 --- a/src/java/com/android/internal/telephony/test/SimulatedCommands.java
 +++ b/src/java/com/android/internal/telephony/test/SimulatedCommands.java
-@@ -1753,4 +1753,6 @@ public final class SimulatedCommands extends BaseCommands
+@@ -1767,4 +1767,6 @@ public final class SimulatedCommands extends BaseCommands
      public void requestShutdown(Message result) {
          setRadioState(RadioState.RADIO_UNAVAILABLE);
      }

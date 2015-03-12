@@ -1,8 +1,7 @@
-From 1cd9729fd0e140fa1a7449c09c85c0f2471ceba3 Mon Sep 17 00:00:00 2001
+From 5fd93f7229301a52924614c110e85714f6518a52 Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
-Date: Wed, 21 Jan 2015 15:13:44 +0100
+Date: Thu, 12 Mar 2015 17:39:25 +0100
 Subject: [PATCH 4/4] frameworks/opt/telephony: implement UICC TLV Data
- decoding
 
 ---
  .../internal/telephony/uicc/IccFileHandler.java    |  77 +++++++----
@@ -289,3 +288,4 @@ index 0000000..a709822
 +}
 -- 
 2.1.0
+
