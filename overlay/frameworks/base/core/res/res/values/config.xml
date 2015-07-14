@@ -238,6 +238,14 @@
     <!-- Enable support for legacy GPS HALs -->
     <bool name="config_legacyGpsHAL">true</bool>
 
+    <!-- GPS location providers -->
+    <string-array name="config_locationProviderPackageNames" translatable="false">
+        <!-- Current Google location provider -->
+        <item>com.google.android.gms</item>
+        <!-- The standard AOSP fused location provider -->
+        <item>com.android.location.fused</item>
+    </string-array>
+
     <!-- Control the behavior when the user long presses the home button.
             0 - Nothing
             1 - Recent apps view in SystemUI
