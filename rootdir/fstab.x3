@@ -8,3 +8,4 @@
 /dev/block/platform/sdhci-tegra.3/by-name/MLT   /mpt          ext4  nosuid,nodev,barrier=1,data=ordered  wait
 /devices/platform/sdhci-tegra.2/mmc_host/mmc2   auto          auto  defaults   voldmanaged=sdcard1:auto
 /dev/block/platform/sdhci-tegra.2/by-num/p1     auto          auto  defaults   recoveryonly
+/dev/block/zram0                                none          swap  defaults   zramsize=268435456
