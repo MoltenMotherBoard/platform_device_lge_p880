@@ -1,19 +1,20 @@
-From aab097f9a3e40938d31fe5c09f278437f0f759af Mon Sep 17 00:00:00 2001
+From f17aab6c02a68ddc7d24776f9d85a9f26ddf03d3 Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
-Date: Tue, 14 Jul 2015 21:26:20 +0200
-Subject: [PATCH 3/3] frameworks/base: fix GPS for old GPS HALs
+Date: Mon, 24 Aug 2015 15:15:53 +0200
+Subject: [PATCH 3/3] frameworks/base: fix GPS for old GPS HALs Updated version
+ needed to fix wakelock issues.
 
 ---
- core/res/res/values/config.xml                                         | 3 +++
- core/res/res/values/symbols.xml                                        | 1 +
- .../core/java/com/android/server/location/GpsLocationProvider.java     | 2 ++
- 3 files changed, 6 insertions(+)
+ core/res/res/values/config.xml                               |  3 +++
+ core/res/res/values/symbols.xml                              |  1 +
+ .../com/android/server/location/GpsLocationProvider.java     | 12 ++----------
+ 3 files changed, 6 insertions(+), 10 deletions(-)
 
 diff --git a/core/res/res/values/config.xml b/core/res/res/values/config.xml
-index 68df6f1..3db0863 100755
+index 3de2268..aa0eff0 100755
 --- a/core/res/res/values/config.xml
 +++ b/core/res/res/values/config.xml
-@@ -1924,6 +1924,9 @@
+@@ -1932,6 +1932,9 @@
          <item>SUPL_MODE=1</item>
      </string-array>
  
@@ -24,7 +25,7 @@ index 68df6f1..3db0863 100755
           Verizon require to load a default vm number from the configurantion.
           Define config_default_vm_number for this purpose. And there are two
 diff --git a/core/res/res/values/symbols.xml b/core/res/res/values/symbols.xml
-index 1055547..72797fd 100755
+index 816d203..a645a85 100755
 --- a/core/res/res/values/symbols.xml
 +++ b/core/res/res/values/symbols.xml
 @@ -379,6 +379,7 @@
@@ -36,7 +37,7 @@ index 1055547..72797fd 100755
    <java-symbol type="color" name="tab_indicator_text_v4" />
  
 diff --git a/services/core/java/com/android/server/location/GpsLocationProvider.java b/services/core/java/com/android/server/location/GpsLocationProvider.java
-index 5ae6300..2727fd7 100644
+index 5ae6300..a1664f6 100644
 --- a/services/core/java/com/android/server/location/GpsLocationProvider.java
 +++ b/services/core/java/com/android/server/location/GpsLocationProvider.java
 @@ -536,6 +536,7 @@ public class GpsLocationProvider implements LocationProviderInterface {
@@ -55,6 +56,23 @@ index 5ae6300..2727fd7 100644
          } catch (IOException ex) {
              Log.w(TAG, "failed to dump properties contents");
          }
+@@ -1627,16 +1629,6 @@ public class GpsLocationProvider implements LocationProviderInterface {
+      */
+     private void setEngineCapabilities(int capabilities) {
+         mEngineCapabilities = capabilities;
+-
+-        if (!hasCapability(GPS_CAPABILITY_ON_DEMAND_TIME) && !mPeriodicTimeInjection) {
+-            mPeriodicTimeInjection = true;
+-            requestUtcTime();
+-        }
+-
+-        mGpsMeasurementsProvider.onCapabilitiesUpdated(
+-                (capabilities & GPS_CAPABILITY_MEASUREMENTS) == GPS_CAPABILITY_MEASUREMENTS);
+-        mGpsNavigationMessageProvider.onCapabilitiesUpdated(
+-                (capabilities & GPS_CAPABILITY_NAV_MESSAGES) == GPS_CAPABILITY_NAV_MESSAGES);
+     }
+ 
+     /**
 -- 
 2.4.3
 
