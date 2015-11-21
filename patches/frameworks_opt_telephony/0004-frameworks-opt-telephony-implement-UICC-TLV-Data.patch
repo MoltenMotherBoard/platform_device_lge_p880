@@ -1,27 +1,18 @@
-From 5fd93f7229301a52924614c110e85714f6518a52 Mon Sep 17 00:00:00 2001
+From 93d8b67d7b1b47c2ef10e8ab110ace5b3b62bb73 Mon Sep 17 00:00:00 2001
 From: streambinder <davidepucci@hiddenhost.org>
-Date: Thu, 12 Mar 2015 17:39:25 +0100
-Subject: [PATCH 4/4] frameworks/opt/telephony: implement UICC TLV Data
+Date: Wed, 11 Nov 2015 13:45:32 -0800
+Subject: [PATCH] frameworks/opt/telephony: implement UICC TLV Data
 
 ---
- .../internal/telephony/uicc/IccFileHandler.java    |  77 +++++++----
+ .../internal/telephony/uicc/IccFileHandler.java    |  75 ++++++----
  .../internal/telephony/uicc/UiccTlvData.java       | 153 +++++++++++++++++++++
- 2 files changed, 201 insertions(+), 29 deletions(-)
+ 2 files changed, 200 insertions(+), 28 deletions(-)
  create mode 100644 src/java/com/android/internal/telephony/uicc/UiccTlvData.java
 
 diff --git a/src/java/com/android/internal/telephony/uicc/IccFileHandler.java b/src/java/com/android/internal/telephony/uicc/IccFileHandler.java
-index a460819..ee2eb67 100644
+index a460819..d9761df 100644
 --- a/src/java/com/android/internal/telephony/uicc/IccFileHandler.java
 +++ b/src/java/com/android/internal/telephony/uicc/IccFileHandler.java
-@@ -152,7 +152,7 @@ public abstract class IccFileHandler extends Handler implements IccConstants {
-                         new LoadLinearFixedContext(fileid, recordNum, onLoaded));
- 
-         mCi.iccIOForApp(COMMAND_GET_RESPONSE, fileid, getEFPath(fileid),
--                        0, 0, GET_RESPONSE_EF_SIZE_BYTES, null, null, mAid, response);
-+                        0, 0, 0, null, null, mAid, response);
-     }
- 
-     /**
 @@ -363,17 +363,26 @@ public abstract class IccFileHandler extends Handler implements IccConstants {
  
                  data = result.payload;
@@ -287,5 +278,5 @@ index 0000000..a709822
 +
 +}
 -- 
-2.1.0
+1.9.1
 
