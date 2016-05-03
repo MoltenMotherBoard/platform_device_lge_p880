@@ -25,3 +25,6 @@ allow system_server nvhost_writable_device:dir rw_dir_perms;
 allow system_server nvhost_writable_device:file rw_file_perms;
 allow system_server nvhost_writable_device:chr_file { read write ioctl open };
 
+allow mediaserver system_server:unix_stream_socket write;
+#============= system_server ==============
+allow system_server init:unix_dgram_socket sendto;

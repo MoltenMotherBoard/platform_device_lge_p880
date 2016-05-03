@@ -8,3 +8,5 @@ allow mediaserver nvcam_data_files:dir search;
 allow mediaserver system_server:unix_stream_socket read;
 allow mediaserver radio_device:chr_file { read write open };
 allow mediaserver sysfs_wake_lock:file rw_file_perms;
+#============= mediaserver ==============
+allow mediaserver system_server:unix_stream_socket write;

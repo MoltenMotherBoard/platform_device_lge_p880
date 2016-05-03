@@ -1,1 +1,13 @@
 allow drmserver knv_device:chr_file rw_file_perms;
+#============= drmserver ==============
+allow drmserver self:process execmem;
+#============= lgdrmserver ==============
+allow lgdrmserver lgsecclk:binder call;
+allow lgdrmserver radio_device:blk_file { read open };
+allow lgdrmserver servicemanager:binder { transfer call };
+allow lgdrmserver system_data_file:dir { read open };
+allow lgdrmserver system_data_file:file { write lock open };
+allow rild lgdrmserver:binder call;
+allow servicemanager lgdrmserver:dir search;
+allow servicemanager lgdrmserver:file { read open };
+allow servicemanager lgdrmserver:process getattr;

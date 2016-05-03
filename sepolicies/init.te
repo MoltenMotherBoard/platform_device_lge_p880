@@ -1,0 +1,4 @@
+#============= init ==============
+allow init self:capability sys_module;
+allow system_server init:unix_dgram_socket sendto;
+allow wpa init:unix_dgram_socket { read write };

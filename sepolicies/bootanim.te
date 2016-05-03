@@ -1,0 +1,3 @@
+#============= bootanim ==============
+allow bootanim nvhost_writable_device:chr_file { read write ioctl open };
+allow bootanim self:process execmem;

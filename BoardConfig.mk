@@ -133,8 +133,6 @@ TARGET_BOOTANIMATION_PRELOAD := true
 TARGET_BOOTANIMATION_TEXTURE_CACHE := true
 
 # SELinux
-ifeq ($(HAVE_SELINUX),true)
-
 BOARD_SEPOLICY_DIRS += \
     device/lge/p880/sepolicies
 
@@ -144,12 +142,14 @@ BOARD_SEPOLICY_UNION += \
     property_contexts \
     service_contexts \
     bluetooth.te \
+    bootanim.te \
     device.te \
     domain.te \
     drmserver.te \
-    init_shell.te \
     file.te \
     gpsd.te \
+    init_shell.te \
+    init.te \
     keystore.te \
     lmkd.te \
     mediaserver.te \
@@ -157,13 +157,13 @@ BOARD_SEPOLICY_UNION += \
     recovery.te \
     rild.te \
     sensors_config.te \
+    servicemanager.te \
     surfaceflinger.te \
     system_app.te \
     system_server.te \
     ueventd.te \
-    vold.te
-
-endif
+    vold.te \
+    wpa.te
 
 TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := true
 

@@ -45,6 +45,8 @@
 
 /system/bin/lgdrmserver           u:object_r:lgdrmserver_exec:s0
 /system/bin/nvcpud                u:object_r:nvcpud_exec:s0
+/dev/cpu_freq_min                 u:object_r:nvcpu_device:s0
+/dev/cpu_freq_max                 u:object_r:nvcpu_device:s0
 /system/bin/lgsecclkserver        u:object_r:lgsecclk_exec:s0
 
 /sys/devices/tegradc\.0(/.*)?                u:object_r:sysfs_devices_tegradc:s0
@@ -52,6 +54,7 @@
 /sys/devices/platform/tegra-i2c.1/i2c-1/1-0010/update_fw    --  u:object_r:sysfs_firmware_writable:s0
 /sys/devices/platform/bcm4330_rfkill/rfkill/rfkill0/state   --  u:object_r:sysfs_bluetooth_writable:s0
 /sys/devices/platform/bcm4330_rfkill/rfkill/rfkill0/type    --  u:object_r:sysfs_bluetooth_writable:s0
+/dev/rfkill                                  u:object_r:wpa_device:s0
 
 # Hardware tunables
 /sys/devices/platform/spi_tegra.4/spi4.2/gamma_tuning    u:object_r:sysfs_hardware:s0

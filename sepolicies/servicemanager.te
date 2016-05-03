@@ -1,0 +1,15 @@
+allow lgdrmserver system_server_service:service_manager add;
+allow lgdrmserver lgsecclk:binder call;
+allow lgsecclk system_server_service:service_manager add;
+allow lgsecclk servicemanager:binder { transfer call };
+#============= nvcpud ==============
+allow nvcpud system_server_service:service_manager add;
+allow nvcpud nvcpu_device:chr_file rw_file_perms;
+allow nvcpud servicemanager:binder { transfer call };
+#============= servicemanager ==============
+allow servicemanager lgsecclk:dir search;
+allow servicemanager lgsecclk:file { read open };
+allow servicemanager lgsecclk:process getattr;
+allow servicemanager nvcpud:dir search;
+allow servicemanager nvcpud:file { read open };
+allow servicemanager nvcpud:process getattr;
