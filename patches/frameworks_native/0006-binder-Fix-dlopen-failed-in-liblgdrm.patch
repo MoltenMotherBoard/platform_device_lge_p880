@@ -1,0 +1,36 @@
+From 4b381a0c827330818aa403eb7c49365c4a000608 Mon Sep 17 00:00:00 2001
+From: auser <user@usa.net>
+Date: Sat, 23 Apr 2016 00:11:55 -0700
+Subject: [PATCH] libbinder: Fix dlopen failed in liblgdrm
+
+---
+ libs/binder/IPCThreadState.cpp | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/libs/binder/IPCThreadState.cpp b/libs/binder/IPCThreadState.cpp
+index dd04dcf..6a6863f 100644
+--- a/libs/binder/IPCThreadState.cpp
++++ b/libs/binder/IPCThreadState.cpp
+@@ -361,11 +361,19 @@ status_t IPCThreadState::clearLastError()
+     return err;
+ }
+ 
++extern "C" pid_t _ZNK7android14IPCThreadState13getCallingPidEv(void *obj);
++extern "C" int _ZN7android14IPCThreadState13getCallingPidEv(void *obj) {
++    return _ZNK7android14IPCThreadState13getCallingPidEv(obj);
++}
+ int IPCThreadState::getCallingPid() const
+ {
+     return mCallingPid;
+ }
+ 
++extern "C" int _ZNK7android14IPCThreadState13getCallingUidEv(void *obj);
++extern "C" int _ZN7android14IPCThreadState13getCallingUidEv(void *obj) {
++    return _ZNK7android14IPCThreadState13getCallingUidEv(obj);
++}
+ int IPCThreadState::getCallingUid() const
+ {
+     return mCallingUid;
+-- 
+1.9.1
+
